@@ -1,0 +1,98 @@
+x-backend: &backend
+  image: insider-studio-backend:local
+  environment: &env
+    DATABASE_URL: postgres://studio:studio@postgres:5432/studio?sslmode=disable
+    REDIS_ADDR: redis:6379
+    PROVIDER_URL: http://provider:8090
+    LLM_MODE: ${LLM_MODE:-mock}
+    ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-5}
+  depends_on:
+    migrate:
+      condition: service_completed_successfully
+    redis:
+      condition: service_healthy
+  restart: unless-stopped
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: studio
+      POSTGRES_PASSWORD: studio
+      POSTGRES_DB: studio
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U studio -d studio']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7.4-alpine
+    command: redis-server --appendonly yes --maxmemory-policy noeviction
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  migrate:
+    image: insider-studio-backend:local
+    build: ./backend
+    command: migrate
+    environment:
+      DATABASE_URL: postgres://studio:studio@postgres:5432/studio?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+  api:
+    <<: *backend
+    command: api
+    ports: ['127.0.0.1:18081:8081']
+  dispatcher:
+    <<: *backend
+    command: dispatcher
+  generation-worker:
+    <<: *backend
+    command: worker
+    environment:
+      <<: *env
+      WORKER_QUEUE: campaign
+      WORKER_CONCURRENCY: 2
+  sms-worker:
+    <<: *backend
+    command: worker
+    environment:
+      <<: *env
+      WORKER_QUEUE: sms
+      WORKER_CONCURRENCY: 32
+  email-worker:
+    <<: *backend
+    command: worker
+    environment:
+      <<: *env
+      WORKER_QUEUE: email
+      WORKER_CONCURRENCY: 32
+  provider:
+    <<: *backend
+    command: provider
+  frontend:
+    build: ./frontend
+    ports: ['127.0.0.1:18080:80']
+    depends_on: [api]
+    restart: unless-stopped
+  integration:
+    profiles: [test]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    environment:
+      TEST_DATABASE_URL: postgres://studio:studio@postgres:5432/studio?sslmode=disable
+      TEST_REDIS_ADDR: redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+volumes:
+  pgdata:
+  redisdata:

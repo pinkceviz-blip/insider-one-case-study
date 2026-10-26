@@ -1,0 +1,264 @@
+{
+  "llm_mode": "mock",
+  "scenarios": [
+    {
+      "name": "İstanbul · samimi · %10",
+      "brief": "İstanbul'da son 7 günde sepetine ürün ekleyip satın almayan kullanıcılara %10 indirim hatırlatması gönder. Samimi ve kısa olsun.",
+      "city": "İstanbul",
+      "days": 7,
+      "discount": "10",
+      "id": "97ae870d03638143dc3cc6e1c5c9ae9c",
+      "proposal": {
+        "segment": {
+          "city": "İstanbul",
+          "days": 7,
+          "exclude_purchased": true
+        },
+        "content": {
+          "sms": "Merhaba {{first_name}}, sepetin seni bekliyor! %10 indirim fırsatını kaçırma.",
+          "email_subject": "Sepetinde %10 indirim seni bekliyor",
+          "email_body": "Merhaba {{first_name}}, seçtiğin ürünleri %10 indirimle tamamlayabilirsin. Sepetine dön, fırsatı değerlendir!"
+        }
+      },
+      "audience": {
+        "total": 168,
+        "sms": 168,
+        "email": 24
+      },
+      "status": "completed",
+      "oversized_sms_rejected": true,
+      "counts": {
+        "accepted": 187,
+        "failed": 5
+      },
+      "verification": {
+        "delivery_count": 192,
+        "accepted_count": 187,
+        "unique_provider_keys": 187,
+        "wrong_city": 0,
+        "without_consent": 0,
+        "unresolved_variables": 0,
+        "missing_sent_date": 0,
+        "channels": {
+          "email": {
+            "accepted": 23,
+            "failed": 1
+          },
+          "sms": {
+            "accepted": 164,
+            "failed": 4
+          }
+        },
+        "error_kinds": {
+          "transient": 33,
+          "throttled": 13,
+          "permanent": 5
+        },
+        "examples": [
+          {
+            "channel": "email",
+            "user_id": 126,
+            "first_name": "Can",
+            "city": "İstanbul",
+            "subject": "Sepetinde %10 indirim seni bekliyor",
+            "body": "Merhaba Can, seçtiğin ürünleri %10 indirimle tamamlayabilirsin. Sepetine dön, fırsatı değerlendir!"
+          },
+          {
+            "channel": "email",
+            "user_id": 63,
+            "first_name": "Zeynep",
+            "city": "İstanbul",
+            "subject": "Sepetinde %10 indirim seni bekliyor",
+            "body": "Merhaba Zeynep, seçtiğin ürünleri %10 indirimle tamamlayabilirsin. Sepetine dön, fırsatı değerlendir!"
+          },
+          {
+            "channel": "sms",
+            "user_id": 6,
+            "first_name": "Can",
+            "city": "İstanbul",
+            "subject": "",
+            "body": "Merhaba Can, sepetin seni bekliyor! %10 indirim fırsatını kaçırma."
+          },
+          {
+            "channel": "sms",
+            "user_id": 3,
+            "first_name": "Zeynep",
+            "city": "İstanbul",
+            "subject": "",
+            "body": "Merhaba Zeynep, sepetin seni bekliyor! %10 indirim fırsatını kaçırma."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ankara · resmi · %20",
+      "brief": "Ankara'da son 2 günde sepetine ürün ekleyip satın almayan kullanıcılara %20 indirim hatırlatması gönder. Resmi bir dil kullan.",
+      "city": "Ankara",
+      "days": 2,
+      "discount": "20",
+      "id": "ccaad15c670df3b91ba0a0e0d71360b7",
+      "proposal": {
+        "segment": {
+          "city": "Ankara",
+          "days": 2,
+          "exclude_purchased": true
+        },
+        "content": {
+          "sms": "Merhaba {{first_name}}, sepetin seni bekliyor! %20 indirim fırsatını kaçırma.",
+          "email_subject": "Sepetinde %20 indirim seni bekliyor",
+          "email_body": "Merhaba {{first_name}}, seçtiğin ürünleri %20 indirimle tamamlayabilirsin. Sepetine dön, fırsatı değerlendir!"
+        }
+      },
+      "audience": {
+        "total": 84,
+        "sms": 84,
+        "email": 84
+      },
+      "status": "completed",
+      "oversized_sms_rejected": true,
+      "counts": {
+        "accepted": 164,
+        "failed": 4
+      },
+      "verification": {
+        "delivery_count": 168,
+        "accepted_count": 164,
+        "unique_provider_keys": 164,
+        "wrong_city": 0,
+        "without_consent": 0,
+        "unresolved_variables": 0,
+        "missing_sent_date": 0,
+        "channels": {
+          "email": {
+            "accepted": 82,
+            "failed": 2
+          },
+          "sms": {
+            "accepted": 82,
+            "failed": 2
+          }
+        },
+        "error_kinds": {
+          "transient": 35,
+          "throttled": 12,
+          "permanent": 4
+        },
+        "examples": [
+          {
+            "channel": "email",
+            "user_id": 1,
+            "first_name": "Ece",
+            "city": "Ankara",
+            "subject": "Sepetinde %20 indirim seni bekliyor",
+            "body": "Merhaba Ece, seçtiğin ürünleri %20 indirimle tamamlayabilirsin. Sepetine dön, fırsatı değerlendir!"
+          },
+          {
+            "channel": "sms",
+            "user_id": 1,
+            "first_name": "Ece",
+            "city": "Ankara",
+            "subject": "",
+            "body": "Merhaba Ece, sepetin seni bekliyor! %20 indirim fırsatını kaçırma."
+          }
+        ]
+      }
+    },
+    {
+      "name": "İzmir · enerjik · %40",
+      "brief": "İzmir'de son 3 günde sepetine ürün ekleyip satın almayan kullanıcılara %40 indirim hatırlatması gönder. Enerjik bir dil kullan.",
+      "city": "İzmir",
+      "days": 3,
+      "discount": "40",
+      "id": "ef838af6ef254a0eb987da41bd4862ea",
+      "proposal": {
+        "segment": {
+          "city": "İzmir",
+          "days": 3,
+          "exclude_purchased": true
+        },
+        "content": {
+          "sms": "Merhaba {{first_name}}, sepetin seni bekliyor! %40 indirim fırsatını kaçırma.",
+          "email_subject": "Sepetinde %40 indirim seni bekliyor",
+          "email_body": "Merhaba {{first_name}}, seçtiğin ürünleri %40 indirimle tamamlayabilirsin. Sepetine dön, fırsatı değerlendir!"
+        }
+      },
+      "audience": {
+        "total": 84,
+        "sms": 84,
+        "email": 84
+      },
+      "status": "completed",
+      "oversized_sms_rejected": true,
+      "counts": {
+        "accepted": 162,
+        "failed": 6
+      },
+      "verification": {
+        "delivery_count": 168,
+        "accepted_count": 162,
+        "unique_provider_keys": 162,
+        "wrong_city": 0,
+        "without_consent": 0,
+        "unresolved_variables": 0,
+        "missing_sent_date": 0,
+        "channels": {
+          "email": {
+            "accepted": 82,
+            "failed": 2
+          },
+          "sms": {
+            "accepted": 80,
+            "failed": 4
+          }
+        },
+        "error_kinds": {
+          "transient": 30,
+          "throttled": 12,
+          "permanent": 6
+        },
+        "examples": [
+          {
+            "channel": "email",
+            "user_id": 2,
+            "first_name": "Mehmet",
+            "city": "İzmir",
+            "subject": "Sepetinde %40 indirim seni bekliyor",
+            "body": "Merhaba Mehmet, seçtiğin ürünleri %40 indirimle tamamlayabilirsin. Sepetine dön, fırsatı değerlendir!"
+          },
+          {
+            "channel": "sms",
+            "user_id": 2,
+            "first_name": "Mehmet",
+            "city": "İzmir",
+            "subject": "",
+            "body": "Merhaba Mehmet, sepetin seni bekliyor! %40 indirim fırsatını kaçırma."
+          }
+        ]
+      }
+    }
+  ],
+  "controls": [
+    {
+      "id": "02b7b57ab746ba7899208bc6ce575a2d",
+      "brief": "İzmir'de son 3 günde sepetine ürün ekleyip satın almayanlara indirimsiz bir hatırlatma gönder. İndirim oranı veya kampanya teklifi belirtme.",
+      "proposal": {
+        "segment": {
+          "city": "İzmir",
+          "days": 3,
+          "exclude_purchased": true
+        },
+        "content": {
+          "sms": "Merhaba {{first_name}}, sepetin seni bekliyor! %30 indirim fırsatını kaçırma.",
+          "email_subject": "Sepetinde %30 indirim seni bekliyor",
+          "email_body": "Merhaba {{first_name}}, seçtiğin ürünleri %30 indirimle tamamlayabilirsin. Sepetine dön, fırsatı değerlendir!"
+        }
+      },
+      "status": "draft",
+      "approved": false,
+      "finding": "Mock LLM varsayılan %30 teklifini ekledi; brief ile uyuşmadığından onaylanmadı."
+    }
+  ],
+  "cross_campaign_user_overlap": 0,
+  "control_provider_sends": 0,
+  "checks_passed": true
+}
