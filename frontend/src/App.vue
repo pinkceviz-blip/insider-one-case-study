@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { campaignPath, deliveryHistoryPath, literalCount, templateError } from './security.js'
 const channelViews=[{id:'sms',label:'SMS',icon:'▤'},{id:'email',label:'Email',icon:'✉'}]
 const channelStats=ref({sms:{},email:{}}), channelStatsError=ref('')
@@ -9,6 +9,7 @@ const dashboardState=ref('connecting')
 const page=ref('studio'), step=ref(1), brief=ref("Son 30 günde sepetine ürün ekleyip alışveriş yapmayan İstanbul'daki kullanıcılara %30 indirim hatırlatması gönder. Samimi ama kısa olsun.")
 const campaign=ref(null), content=ref({sms:'',email_subject:'',email_body:''}), busy=ref(false), error=ref(''), consent=ref(false), streamState=ref('connecting')
 const config=ref({llm_mode:'mock',limits:{brief:4000,sms:160,email_subject:80,email_body:10000}}), campaigns=ref([]), stats=ref({}), health=ref(null), healthError=ref(''), lastRefresh=ref(null)
+const auditOpen=ref(false)
 const errorItems=ref([]), auditCursor=ref(0), auditChannel=ref(''), auditKind=ref(''), auditScope=ref('all'), auditError=ref(''), auditBusy=ref(false), deliveryDetail=ref(null)
 let auditEpoch=0, detailEpoch=0
 const dateTime=value=>value?new Date(value).toLocaleString('tr-TR'):'—'
@@ -23,7 +24,7 @@ async function refreshErrors(append=false){
 async function inspectDelivery(id){
  const epoch=++detailEpoch;auditError.value='';try{const data=await api(deliveryHistoryPath(id));if(epoch===detailEpoch)deliveryDetail.value=data}catch(e){if(epoch===detailEpoch)auditError.value=e.message}
 }
-function showCampaignErrors(c){campaign.value=c;auditScope.value='selected';refreshErrors();document.querySelector('.error-panel')?.scrollIntoView({behavior:'smooth',block:'start'})}
+async function showCampaignErrors(c){campaign.value=c;auditScope.value='selected';auditOpen.value=true;refreshErrors();await nextTick();document.querySelector('.error-panel')?.scrollIntoView({behavior:'smooth',block:'start'})}
 function closeDetail(){detailEpoch++;deliveryDetail.value=null}
 watch([auditChannel,auditKind,auditScope],()=>refreshErrors())
 let source, dashboardSource
@@ -129,8 +130,8 @@ onUnmounted(()=>{source?.close();dashboardSource?.close()})
      <div class="page-title"><div><div class="eyebrow">HER MESAJIN İZİNİ SÜR</div><h1>Gönderim takibi<span class="orange">.</span></h1><p>Her kampanyanın SMS ve email gönderim durumunu ayrı ayrı izle.</p></div></div>
      <section class="campaign-history" aria-label="Kampanya gönderim geçmişi">
       <div v-if="!campaigns.length" class="panel empty"><h3>Henüz kampanya yok</h3><p>İlk kampanyanı oluştur, gönderim durumunu burada izle.</p><button class="secondary" @click="reset">Kampanya oluştur →</button></div>
-      <article v-for="c in campaigns" :key="c.id" class="panel delivery-panel campaign-history-card">
-       <div class="panel-heading"><div><div class="eyebrow muted">{{dateTime(c.created_at)}} · {{c.id.slice(0,8)}}</div><h2>{{c.proposal?.segment?.city||'Kitle hazırlanıyor'}}</h2></div><span class="status-badge" :class="c.status">{{statusNames[c.status]}}</span></div>
+      <details v-for="c in campaigns" :key="c.id" class="panel delivery-panel campaign-history-card">
+       <summary class="record-summary"><div class="record-summary-copy"><div class="eyebrow muted">{{dateTime(c.created_at)}} · {{c.id.slice(0,8)}}</div><h2>{{c.proposal?.segment?.city||'Kitle hazırlanıyor'}}</h2><p class="record-excerpt">{{c.brief}}</p></div><span class="status-badge" :class="c.status">{{statusNames[c.status]}}</span><span class="record-chevron" aria-hidden="true">⌄</span></summary><div class="record-body">
        <p class="campaign-brief">{{c.brief}}</p>
        <p v-if="['draft','generating','failed'].includes(c.status)" class="fineprint">Henüz gönderime alınmadı.</p>
        <div v-else class="campaign-channels">
@@ -140,18 +141,18 @@ onUnmounted(()=>{source?.close();dashboardSource?.close()})
        </div>
        <p class="fineprint">Provider kabulü, alıcıya teslim edildi anlamına gelmez.</p>
        <div class="actions"><button v-if="['draft','generating','failed'].includes(c.status)" class="secondary" @click="load(c.id)">Kampanyayı aç →</button><button class="secondary" @click="showCampaignErrors(c)">Hatalar ve retry nedenleri ↓</button></div>
-      </article>
+      </div></details>
      </section>
 
-     <section class="panel error-panel">
-      <div class="panel-heading"><div><div class="eyebrow muted">İNCELEME & DENEME GEÇMİŞİ</div><h2>Hatalar ve retry nedenleri</h2></div><button class="secondary" :disabled="auditBusy" @click="refreshErrors()">↻ Yenile</button></div>
+     <details class="panel error-panel" :open="auditOpen" @toggle="auditOpen=$event.target.open">
+      <summary class="record-summary"><div class="record-summary-copy"><div class="eyebrow muted">İNCELEME & DENEME GEÇMİŞİ</div><h2>Hatalar ve retry nedenleri</h2></div><span class="record-chevron" aria-hidden="true">⌄</span></summary><div class="record-body"><button class="secondary" :disabled="auditBusy" @click="refreshErrors()">↻ Yenile</button>
       <p class="fineprint">Geçmişte hata alıp sonra başarılı olan mesajlar da burada görünür. Geçici bir hata, mesajın son durumunun başarısız olduğu anlamına gelmez.</p>
       <div class="audit-filters"><label>Kanal<select v-model="auditChannel"><option value="">Tüm kanallar</option><option value="sms">SMS</option><option value="email">Email</option></select></label><label>Hata sınıfı<select v-model="auditKind"><option value="">Tüm hatalar</option><option value="transient">Geçici hata</option><option value="throttled">Provider 429</option><option value="permanent">Kalıcı hata</option></select></label><label>Kampanya<select v-model="auditScope"><option value="all">Tüm kampanyalar</option><option v-if="campaign" value="selected">Seçili kampanya</option></select></label></div>
       <p v-if="auditError" class="audit-warning" role="alert">{{auditError}}</p>
       <p v-if="!errorItems.length" class="fineprint">{{auditBusy?'Hata kayıtları yükleniyor…':'Bu filtrelerle eşleşen hata kaydı yok.'}}</p>
-      <div class="audit-rows"><button v-for="a in errorItems" :key="a.id" class="audit-row" @click="inspectDelivery(a.delivery_id)"><div class="audit-row-top"><b>{{a.channel.toUpperCase()}} · {{kindLabels[a.kind]||a.kind}}</b><span class="status-badge" :class="a.state==='accepted'?'completed':a.state==='failed'?'failed':'draft'">{{deliveryLabels[a.state]||a.state}}</span></div><p>{{a.message}}</p><div class="audit-meta"><span>{{dateTime(a.created_at)}}</span><span>{{a.attempt_no?'Deneme '+a.attempt_no:'Önceki sürüm kaydı'}} · {{a.http_status?'HTTP '+a.http_status:a.code}}</span><span>İncele ↗</span></div></button></div>
+      <div class="audit-rows"><details v-for="a in errorItems" :key="a.id" class="audit-row"><summary class="record-summary"><div class="record-summary-copy"><b>{{a.channel.toUpperCase()}} · {{kindLabels[a.kind]||a.kind}}</b><div class="audit-meta">{{dateTime(a.created_at)}} · {{a.attempt_no?'Deneme '+a.attempt_no:'Önceki sürüm kaydı'}}</div></div><span class="status-badge" :class="a.state==='accepted'?'completed':a.state==='failed'?'failed':'draft'">{{deliveryLabels[a.state]||a.state}}</span><span class="record-chevron" aria-hidden="true">⌄</span></summary><div class="audit-record-body"><p>{{a.message}}</p><div class="audit-meta"><span>{{a.http_status?'HTTP '+a.http_status:a.code}}</span></div><button class="secondary" @click="inspectDelivery(a.delivery_id)">Deneme ayrıntılarını incele ↗</button></div></details></div>
       <button v-if="auditCursor" class="secondary wide" :disabled="auditBusy" @click="refreshErrors(true)">Daha eski kayıtları yükle</button>
-     </section>
+     </div></details>
 
     </template>
 

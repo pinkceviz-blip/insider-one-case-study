@@ -8,3 +8,9 @@
 .campaign-history-card{margin-bottom:24px}.campaign-brief{font-size:14px;line-height:1.7;color:#8e725a}.campaign-channels{display:grid;grid-template-columns:1fr 1fr;gap:28px}.campaign-channels h3{color:var(--orange)}.campaign-channels .detail-grid{grid-template-columns:1fr}.campaign-history-card .actions{margin-top:20px}@media(max-width:760px){.campaign-channels{grid-template-columns:1fr}}
 
 .progress-email>div{background:linear-gradient(90deg,#b48262,#765947)}
+
+.record-summary{display:flex;align-items:center;gap:18px;cursor:pointer;list-style:none}.record-summary::-webkit-details-marker{display:none}.record-summary-copy{flex:1;min-width:0}.record-summary h2{margin:8px 0 0;font-size:22px}.record-excerpt{margin:8px 0 0;color:#8e725a;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.record-chevron{font-size:24px;color:var(--orange);transition:transform .15s}.campaign-history-card[open]>.record-summary .record-chevron,.error-panel[open]>.record-summary .record-chevron{transform:rotate(180deg)}.record-summary:focus-visible{outline:2px solid var(--orange);outline-offset:8px;border-radius:4px}.record-body{margin-top:24px;padding-top:20px;border-top:1px solid #eee4d9}.campaign-history-card{padding:22px 26px}.error-panel:not([open]){padding:22px 26px}@media(max-width:640px){.record-summary{gap:10px;flex-wrap:wrap}.record-summary h2{font-size:19px}.record-summary-copy{flex-basis:65%}.record-summary .status-badge{font-size:10px}.campaign-history-card,.error-panel:not([open]){padding:18px}.record-chevron{margin-left:auto}}
+
+.audit-row .record-summary{font-size:13px;color:#75563f}.audit-row .record-summary .audit-meta{margin-top:7px;font-size:11px}.audit-record-body{padding-top:8px}.audit-record-body .secondary{margin-top:14px}.audit-row[open]>.record-summary .record-chevron{transform:rotate(180deg)}
+
+.audit-rows{max-height:460px;overflow-y:auto;overscroll-behavior:contain;padding-right:6px}
