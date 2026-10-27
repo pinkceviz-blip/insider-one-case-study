@@ -25,7 +25,7 @@ func TestIntegrationPipeline(t *testing.T) {
 	if url == "" {
 		t.Skip("set TEST_DATABASE_URL and TEST_REDIS_ADDR for integration")
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 180*time.Second)
 	defer cancel()
 	admin, err := pgxpool.New(ctx, url)
 	if err != nil {
@@ -264,6 +264,13 @@ func TestIntegrationPipeline(t *testing.T) {
 	if n != 1 {
 		t.Fatal("provider accepted twice")
 	}
+	stopDispatch()
+	<-dispatchDone
+	for _, server := range servers {
+		server.Shutdown()
+	}
+	servers = nil
+	exerciseAcceptance(t, ctx, engine, created.ID, opt, api.URL)
 }
 
 func providerHash(key string) int { h := sha256.Sum256([]byte(key)); return int(h[0]) }

@@ -1,0 +1,71 @@
+=== RUN   TestCharacterBudgetExcludesOnlyWhitelistedVariables
+--- PASS: TestCharacterBudgetExcludesOnlyWhitelistedVariables (0.00s)
+=== RUN   TestPersonalizationDoesNotConsumeLiteralBudget
+--- PASS: TestPersonalizationDoesNotConsumeLiteralBudget (0.00s)
+=== RUN   TestTemplateAndRecipientValidation
+--- PASS: TestTemplateAndRecipientValidation (0.00s)
+=== RUN   TestStructuredLLMValidation
+--- PASS: TestStructuredLLMValidation (0.00s)
+=== RUN   TestMockLLMStreaming
+--- PASS: TestMockLLMStreaming (1.24s)
+=== RUN   TestPartialJSONStreaming
+--- PASS: TestPartialJSONStreaming (0.00s)
+=== RUN   TestRetryClassification
+--- PASS: TestRetryClassification (0.00s)
+=== RUN   TestIntegrationPipeline
+asynq: pid=4044 2026/10/27 08:31:08.307324 INFO: Starting processing
+asynq: pid=4044 2026/10/27 08:31:08.307542 INFO: Starting processing
+asynq: pid=4044 2026/10/27 08:31:08.307644 INFO: Starting processing
+2026/10/27 08:31:10 ERROR request failed error="Kampanya sürümü değişti veya artık düzenlenemez; sayfayı yenileyin"
+2026/10/27 08:31:10 ERROR request failed error="Kampanya sürümü değişti veya artık düzenlenemez; sayfayı yenileyin"
+=== RUN   TestIntegrationPipeline/concurrent_duplicate_and_success_timestamp
+=== RUN   TestIntegrationPipeline/persisted_retry_deadline_and_no_failure_timestamp
+=== RUN   TestIntegrationPipeline/throttle_does_not_consume_failure_budget
+=== RUN   TestIntegrationPipeline/accepted_then_worker_cancel_receipt_recovery
+=== RUN   TestIntegrationPipeline/revoked_consent_and_permanent_failure
+=== RUN   TestIntegrationPipeline/same_user_parallel_sms_email_preserves_both_dates
+=== RUN   TestIntegrationPipeline/parallel_approval_does_not_duplicate_deliveries
+=== NAME  TestIntegrationPipeline
+    integration_test.go:243: pipeline: 93 accepted, 2 failed; duplicate approval and task replay safe
+asynq: pid=4044 2026/10/27 08:31:45.490921 INFO: Starting graceful shutdown
+asynq: pid=4044 2026/10/27 08:31:45.857453 INFO: Waiting for all workers to finish...
+asynq: pid=4044 2026/10/27 08:31:45.857656 INFO: All workers have finished
+asynq: pid=4044 2026/10/27 08:31:45.860255 INFO: Exiting
+asynq: pid=4044 2026/10/27 08:31:45.860338 INFO: Starting graceful shutdown
+asynq: pid=4044 2026/10/27 08:31:45.993455 INFO: Waiting for all workers to finish...
+asynq: pid=4044 2026/10/27 08:31:45.993649 INFO: All workers have finished
+asynq: pid=4044 2026/10/27 08:31:45.996402 INFO: Exiting
+asynq: pid=4044 2026/10/27 08:31:45.996496 INFO: Starting graceful shutdown
+asynq: pid=4044 2026/10/27 08:31:46.604502 INFO: Waiting for all workers to finish...
+asynq: pid=4044 2026/10/27 08:31:46.604746 INFO: All workers have finished
+asynq: pid=4044 2026/10/27 08:31:46.607115 INFO: Exiting
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send/malformed_json
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send/unsupported_segment
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send/overlong_content
+=== RUN   TestIntegrationPipeline/outbox_recovers_redis_failure_and_crash_after_enqueue
+=== RUN   TestIntegrationPipeline/sse_reconnect_replays_only_missed_events_and_fresh_snapshot
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/429
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/503
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/timeout
+--- PASS: TestIntegrationPipeline (40.96s)
+    --- PASS: TestIntegrationPipeline/concurrent_duplicate_and_success_timestamp (0.01s)
+    --- PASS: TestIntegrationPipeline/persisted_retry_deadline_and_no_failure_timestamp (0.01s)
+    --- PASS: TestIntegrationPipeline/throttle_does_not_consume_failure_budget (0.07s)
+    --- PASS: TestIntegrationPipeline/accepted_then_worker_cancel_receipt_recovery (0.10s)
+    --- PASS: TestIntegrationPipeline/revoked_consent_and_permanent_failure (0.06s)
+    --- PASS: TestIntegrationPipeline/same_user_parallel_sms_email_preserves_both_dates (0.01s)
+    --- PASS: TestIntegrationPipeline/parallel_approval_does_not_duplicate_deliveries (0.01s)
+    --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send (0.01s)
+        --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send/malformed_json (0.01s)
+        --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send/unsupported_segment (0.00s)
+        --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send/overlong_content (0.00s)
+    --- PASS: TestIntegrationPipeline/outbox_recovers_redis_failure_and_crash_after_enqueue (0.12s)
+    --- PASS: TestIntegrationPipeline/sse_reconnect_replays_only_missed_events_and_fresh_snapshot (0.01s)
+    --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover (0.38s)
+        --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/429 (0.05s)
+        --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/503 (0.06s)
+        --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/timeout (0.27s)
+PASS
+ok  	campaignstudio/internal/studio	43.245s
