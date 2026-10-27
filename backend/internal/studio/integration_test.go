@@ -190,6 +190,19 @@ func TestIntegrationPipeline(t *testing.T) {
 		case <-time.After(200 * time.Millisecond):
 		}
 	}
+
+	for state, n := range campaign.Counts {
+		got := campaign.ChannelCounts["sms"][state] + campaign.ChannelCounts["email"][state]
+		if got != n {
+			t.Fatalf("campaign channel counts mismatch state=%s total=%d channels=%d", state, n, got)
+		}
+	}
+	for _, channel := range []string{"sms", "email"} {
+		var acceptedInDB int
+		if err = pool.QueryRow(ctx, "SELECT count(*) FROM deliveries WHERE campaign_id=$1 AND channel=$2 AND state='accepted'", campaign.ID, channel).Scan(&acceptedInDB); err != nil || acceptedInDB != campaign.ChannelCounts[channel]["accepted"] {
+			t.Fatal("channel accepted count mismatch", channel, err)
+		}
+	}
 	var accepted, unique int
 	if err = pool.QueryRow(ctx, "SELECT count(*),count(DISTINCT idempotency_key) FROM provider_requests").Scan(&accepted, &unique); err != nil {
 		t.Fatal(err)

@@ -32,15 +32,16 @@ type Audience struct {
 	Email int `json:"email"`
 }
 type Campaign struct {
-	ID        string         `json:"id"`
-	Brief     string         `json:"brief"`
-	Status    string         `json:"status"`
-	Version   int            `json:"version"`
-	Proposal  Proposal       `json:"proposal"`
-	Audience  Audience       `json:"audience"`
-	Error     string         `json:"error"`
-	CreatedAt time.Time      `json:"created_at"`
-	Counts    map[string]int `json:"counts"`
+	ID            string                    `json:"id"`
+	Brief         string                    `json:"brief"`
+	Status        string                    `json:"status"`
+	Version       int                       `json:"version"`
+	Proposal      Proposal                  `json:"proposal"`
+	Audience      Audience                  `json:"audience"`
+	Error         string                    `json:"error"`
+	CreatedAt     time.Time                 `json:"created_at"`
+	Counts        map[string]int            `json:"counts"`
+	ChannelCounts map[string]map[string]int `json:"channel_counts"`
 }
 type Recipient struct{ FirstName, Address string }
 type Message struct {

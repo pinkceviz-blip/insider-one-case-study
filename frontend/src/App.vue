@@ -35,10 +35,12 @@ const editable=computed(()=>campaign.value?.status==='draft')
 const invalid=computed(()=>!content.value.sms.trim()||!content.value.email_subject.trim()||!content.value.email_body.trim()||budget(content.value.sms)>160||budget(content.value.email_subject)>80||budget(content.value.email_body)>10000||/\r|\n/.test(content.value.email_subject)||Object.values(content.value).some(v=>templateError(v)))
 const statusNames={generating:'Hazırlanıyor',draft:'Taslak',approved:'Onaylandı',dispatching:'Gönderiliyor',completed:'Tamamlandı',failed:'Üretim hatası',needs_review:'İnceleme gerekiyor'}
 const deliveryLabels={accepted:'Provider kabul etti',failed:'Kalıcı hata',pending:'Kuyrukta',processing:'İşleniyor',retrying:'Yeniden denenecek',suppressed:'İzin nedeniyle iptal',unknown:'Sonucu belirsiz · manuel inceleme'}
-const counts=computed(()=>campaign.value?.counts||{})
-const total=computed(()=>Object.values(counts.value).reduce((a,b)=>a+b,0))
-const terminal=computed(()=>(counts.value.accepted||0)+(counts.value.failed||0)+(counts.value.suppressed||0)+(counts.value.unknown||0))
-const progress=computed(()=>total.value?Math.round(terminal.value/total.value*100):0)
+const campaignProgress=computed(()=>channelViews.map(channel=>{
+ const counts=campaign.value?.channel_counts?.[channel.id]||{}
+ const total=Object.values(counts).reduce((a,b)=>a+b,0)
+ const finished=(counts.accepted||0)+(counts.failed||0)+(counts.suppressed||0)+(counts.unknown||0)
+ return {...channel,counts,total,finished,percent:total?Math.min(100,Math.round(finished/total*100)):0}
+}))
 async function api(path, options={}){
  const r=await fetch(path,{...options,headers:{'Content-Type':'application/json',...options.headers}})
  let data;try{data=await r.json()}catch{throw new Error('Sunucudan geçerli yanıt alınamadı')}
@@ -125,7 +127,11 @@ onUnmounted(()=>{source?.close();dashboardSource?.close()})
 
     <template v-if="page==='monitor'">
      <div class="page-title"><div><div class="eyebrow">HER MESAJIN İZİNİ SÜR</div><h1>Gönderim takibi<span class="orange">.</span></h1><p>Kuyruktan provider’a, tüm süreç tek ekranda.</p></div></div>
-     <section v-if="campaign && !['draft','generating','failed'].includes(campaign.status)" class="panel delivery-panel"><div class="panel-heading"><div><div class="eyebrow muted">SEÇİLİ KAMPANYA · {{campaign.id.slice(0,8)}}</div><h2>{{campaign.proposal.segment.city}} · {{statusNames[campaign.status]}}</h2></div><span class="live-badge"><i :class="{offline:streamState!=='live'}"></i>{{streamState==='live'?'CANLI SSE':'YENİDEN BAĞLANIYOR'}}</span></div><p class="fineprint">{{campaign.brief}}</p><div class="progress-heading"><b>{{fmt(terminal)}} / {{fmt(total)}} mesaj sonuçlandı</b><span>%{{progress}}</span></div><div class="progress-track"><div :style="{width:progress+'%'}"></div></div><div class="detail-grid"><div v-for="(label,key) in deliveryLabels" :key="key"><span>{{label}}</span><b>{{fmt(counts[key])}}</b></div></div></section>
+     <section v-if="campaign && !['draft','generating','failed'].includes(campaign.status)" class="panel delivery-panel"><div class="panel-heading"><div><div class="eyebrow muted">SEÇİLİ KAMPANYA · {{campaign.id.slice(0,8)}}</div><h2>{{campaign.proposal.segment.city}} · {{statusNames[campaign.status]}}</h2></div><span class="live-badge"><i :class="{offline:streamState!=='live'}"></i>{{streamState==='live'?'CANLI SSE':'YENİDEN BAĞLANIYOR'}}</span></div><p class="fineprint">{{campaign.brief}}</p><div class="campaign-channel-progress" v-for="channel in campaignProgress" :key="channel.id" :data-channel="channel.id">
+       <div class="progress-heading"><b>{{channel.label}} <span class="progress-count">{{fmt(channel.finished)}} / {{fmt(channel.total)}} işlendi</span></b><span>{{channel.total?'%'+channel.percent:'Alıcı yok'}}</span></div>
+       <div class="progress-track" :class="'progress-'+channel.id" role="progressbar" :aria-label="channel.label+' işlenme ilerlemesi'" :aria-valuenow="channel.percent" aria-valuemin="0" aria-valuemax="100"><div :style="{width:channel.percent+'%'}"></div></div>
+       <p class="fineprint progress-outcomes">{{fmt(channel.counts.accepted)}} provider kabulü · {{fmt(channel.counts.failed)}} kalıcı hata · {{fmt(channel.counts.suppressed)}} izin nedeniyle iptal<span v-if="channel.counts.unknown"> · {{fmt(channel.counts.unknown)}} manuel inceleme</span></p>
+      </div></section>
      <p v-if="queueStatsError" class="audit-warning" role="alert">{{queueStatsError}}</p>
      <p v-if="stats.unknown" class="audit-warning" role="alert">{{fmt(stats.unknown)}} mesajın provider sonucu belirsiz. Otomatik retry durduruldu; hata geçmişinden inceleyin.</p>
      <p v-if="channelStatsError" class="audit-warning" role="alert">{{channelStatsError}}</p>

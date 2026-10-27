@@ -58,3 +58,23 @@ it('shows ambiguous provider outcomes for manual review from SSE',async()=>{
  expect(wrapper.text()).toContain('İnceleme gerekiyor')
  expect(wrapper.findAll('[role="alert"]').some(e=>e.text().includes('Otomatik retry durduruldu'))).toBe(true)
 })
+
+it('streams independent SMS/email campaign bars and removes aggregate detail rows',async()=>{
+ await start();await clickText('Kitle ve mesajları oluştur');await clickText('Gönderim takibi')
+ const stream=streams.find(s=>s.url.includes(id))
+ const snapshot={...campaign,status:'dispatching',channel_counts:{sms:{accepted:8,pending:2},email:{accepted:2,retrying:8}},counts:{accepted:10,pending:2,retrying:8}}
+ stream.listeners.snapshot({data:JSON.stringify(snapshot)});await nextTick()
+ expect(wrapper.get('[aria-label="SMS işlenme ilerlemesi"]').attributes('aria-valuenow')).toBe('80')
+ expect(wrapper.get('[aria-label="Email işlenme ilerlemesi"]').attributes('aria-valuenow')).toBe('20')
+ expect(wrapper.get('.delivery-panel').find('.detail-grid').exists()).toBe(false)
+ snapshot.channel_counts.sms={accepted:9,failed:1};stream.listeners.snapshot({data:JSON.stringify(snapshot)});await nextTick()
+ expect(wrapper.get('[aria-label="SMS işlenme ilerlemesi"]').attributes('aria-valuenow')).toBe('100')
+ expect(wrapper.get('[aria-label="Email işlenme ilerlemesi"]').attributes('aria-valuenow')).toBe('20')
+ expect(wrapper.get('[data-channel="sms"]').text()).toContain('9 provider kabulü · 1 kalıcı hata')
+})
+it('shows an empty channel as no recipients without invalid progress',async()=>{
+ await start();await clickText('Kitle ve mesajları oluştur');await clickText('Gönderim takibi')
+ streams.find(s=>s.url.includes(id)).listeners.snapshot({data:JSON.stringify({...campaign,status:'approved',channel_counts:{sms:{pending:3},email:{}}})});await nextTick()
+ expect(wrapper.get('[data-channel="email"]').text()).toContain('Alıcı yok')
+ expect(wrapper.get('[aria-label="Email işlenme ilerlemesi"]').attributes('aria-valuenow')).toBe('0')
+})

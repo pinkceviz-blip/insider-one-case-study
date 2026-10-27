@@ -1,0 +1,73 @@
+sequenceDiagram
+  autonumber
+  actor Human as Pazarlamacı
+  participant UI as Vue
+  participant API as Go API
+  participant PG as PostgreSQL
+  participant D as Dispatcher
+  participant Q as Redis / Asynq
+  participant G as Generation worker
+  participant L as Mock LLM / Claude
+  participant W as SMS veya email worker
+  participant P as Provider adapter
+
+  Human->>UI: Brief yaz
+  UI->>API: POST /api/campaigns
+  API->>PG: TX: campaign + generation outbox
+  PG-->>API: Commit
+  API-->>UI: 202 + campaign ID
+  D->>PG: SKIP LOCKED ile outbox al
+  D->>Q: campaign:generate, sabit task ID
+  D->>PG: published_at commit
+  Q->>G: Job claim
+  G->>L: Brief ile üret
+  L-->>G: Yapılandırılmış çıktı / içerik parçaları
+  G->>PG: generation.started + content.delta events
+  G->>G: JSON/domain + şehir/gün tutarlılığı kontrolü
+  alt Çıktı hatalı
+    G-->>Q: Sınırlı retry, sonra campaign failed + event
+  else Çıktı geçerli
+    G->>PG: Parametreli segment sorgusu, recipients snapshot, draft
+  end
+  API->>PG: Kampanya events ve snapshot oku
+  API-->>UI: SSE: içerik / draft / hata
+  Human->>UI: İçeriği düzenle, önizle, onayla
+  UI->>API: PATCH içerik; POST approve + version
+  API->>API: İçerik + brief/segment kontrolü
+  API->>PG: Campaign FOR UPDATE; sürüm kontrolü
+  API->>PG: TX: approved + unique deliveries + outbox
+  D->>PG: Mesaj outbox kayıtlarını al
+  D->>Q: sms / email kuyruklarına yayınla
+  Q->>W: Mesaj job claim
+  W->>PG: Session advisory lock + fencing token
+  W->>P: Önceki deneme varsa receipt lookup (destekleniyorsa)
+  alt Önceki kabul doğrulandı
+    W->>PG: TX: accepted + attempt + ilgili kanal tarihi
+  else Yeni gönderim güvenle yapılabilir
+    W->>Q: Kanal genelinde 100/s limiter kontrolü
+    W->>PG: Render, sabit payload ve inflight attempt commit
+    W->>PG: Güncel consent FOR SHARE
+    alt İzin iptal
+      W->>PG: suppressed; provider çağrılmaz
+    else İzin var
+      W->>P: Send, Idempotency-Key = delivery ID
+      alt Kabul doğrulandı
+        P-->>W: Receipt ID
+        W->>PG: TX: accepted + attempt + kullanıcı kanal tarihi
+      else Kalıcı ret
+        W->>PG: failed + hata nedeni
+      else Geçici / belirsiz hata
+        alt Provider idempotency garantisi veriyor
+          W->>PG: retrying + next_attempt_at + attempt
+          W-->>Q: Asynq delayed retry, backoff / jitter
+        else Provider idempotency garantisi vermiyor
+          W->>PG: unknown; otomatik tekrar yok
+          Note over UI,PG: Manuel inceleme; campaign needs_review
+        end
+      end
+    end
+  end
+  API->>PG: Dashboard durumu ve hata geçmişi
+  API->>Q: Gerçek kuyruk sayaçları
+  API-->>UI: SSE: değişen dashboard snapshot
+  Note over UI,API: Yeniden bağlantıda güncel tam snapshot

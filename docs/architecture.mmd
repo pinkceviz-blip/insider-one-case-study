@@ -1,0 +1,46 @@
+flowchart TB
+  marketer["Pazarlamacı / insan onayı"]
+  browser["Tarayıcı · Vue.js\nBrief, düzenleme, önizleme, dashboard"]
+  marketer --> browser
+
+  subgraph compose["Docker Compose"]
+    web["frontend · Nginx\nVue statik dosyaları + reverse proxy"]
+    api["api · Go\nREST, doğrulama, sürüm kontrollü onay, SSE"]
+    migrate["migrate\nŞema ve 5.000 sahte kullanıcı"]
+    dispatcher["dispatcher · Go\nOutbox yayınlama + delivery reconciliation"]
+    generation["generation-worker · Go\nConcurrency: 2\nJSON, içerik ve brief/segment doğrulaması"]
+    sms["sms-worker · Go\nConcurrency: 32 / instance"]
+    email["email-worker · Go\nConcurrency: 32 / instance"]
+    provider["provider · HTTP mock\nIdempotency + receipt sorgusu\nDeterministik 429 / 503 / timeout / 422"]
+    pg[("PostgreSQL\nKullanıcılar, izinler, kampanyalar, recipients\nDeliveries, outbox, attempts, events\nMock provider kabul kayıtları")]
+    subgraph redis["Redis · Asynq + paylaşılan limiter"]
+      cq["campaign kuyruğu"]
+      sq["sms kuyruğu"]
+      eq["email kuyruğu"]
+      limiter["Kanal başına global sliding window\n100 istek / saniye + 429 cooldown"]
+    end
+    web <-->|"REST + SSE reverse proxy"| api
+    migrate --> pg
+    api -->|"Create: campaign + outbox\nApprove: deliveries + outbox\nAynı işlemde commit"| pg
+    pg -->|"Yayınlanmamış outbox\nFOR UPDATE SKIP LOCKED"| dispatcher
+    dispatcher -->|"Sabit task ID"| cq
+    dispatcher -->|"Sabit task ID"| sq
+    dispatcher -->|"Sabit task ID"| eq
+    cq --> generation
+    sq --> sms
+    eq --> email
+    generation -->|"Doğrulanmış öneri, alıcı snapshot, stream events"| pg
+    sms <-->|"Token / cooldown"| limiter
+    email <-->|"Token / cooldown"| limiter
+    sms -->|"Send / receipt lookup"| provider
+    email -->|"Send / receipt lookup"| provider
+    sms -->|"Delivery kilidi, güncel izin, sabit payload\nSonuç + attempt + doğrulanmış SMS tarihi"| pg
+    email -->|"Delivery kilidi, güncel izin, sabit payload\nSonuç + attempt + doğrulanmış email tarihi"| pg
+    provider -->|"Kalıcı idempotency key + payload + receipt"| pg
+    api -->|"Durum / hata geçmişi / events"| pg
+    api -->|"Kuyruk sayaçları"| redis
+  end
+
+  browser <-->|"HTTP · localhost:18080\nVue dosyaları, REST ve SSE"| web
+  llm["LLM adapter\nMock LLM varsayılan\nClaude API opsiyonel"]
+  generation <-->|"Brief / stream edilmiş yapılandırılmış çıktı"| llm

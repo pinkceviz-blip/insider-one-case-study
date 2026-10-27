@@ -45,18 +45,23 @@ func (s *Store) Campaign(ctx context.Context, id string) (Campaign, error) {
 		return c, e
 	}
 	c.Counts = map[string]int{}
-	rows, e := s.DB.Query(ctx, "SELECT state,count(*) FROM deliveries WHERE campaign_id=$1 GROUP BY state", id)
+	c.ChannelCounts = map[string]map[string]int{}
+	rows, e := s.DB.Query(ctx, "SELECT channel,state,count(*) FROM deliveries WHERE campaign_id=$1 GROUP BY channel,state", id)
 	if e != nil {
 		return c, e
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var k string
+		var ch, k string
 		var n int
-		if e = rows.Scan(&k, &n); e != nil {
+		if e = rows.Scan(&ch, &k, &n); e != nil {
 			return c, e
 		}
-		c.Counts[k] = n
+		c.Counts[k] += n
+		if c.ChannelCounts[ch] == nil {
+			c.ChannelCounts[ch] = map[string]int{}
+		}
+		c.ChannelCounts[ch][k] = n
 	}
 	if rows.Err() != nil {
 		return c, rows.Err()
