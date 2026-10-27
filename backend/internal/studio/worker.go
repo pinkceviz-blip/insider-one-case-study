@@ -45,8 +45,13 @@ func IsFailure(e error) bool {
 	var p *ProviderError
 	return !(errors.As(e, &p) && p.Kind == Throttled)
 }
+
+// Check short deferrals promptly while the shared limiter remains authoritative.
+func workerConfig(queue string, concurrency int) asynq.Config {
+	return asynq.Config{Concurrency: concurrency, TaskCheckInterval: 100 * time.Millisecond, DelayedTaskCheckInterval: 100 * time.Millisecond, Queues: map[string]int{queue: 1}, RetryDelayFunc: RetryDelay, IsFailure: IsFailure, ShutdownTimeout: 15 * time.Second}
+}
 func (e *Engine) RunWorkers(ctx context.Context, redisOpt asynq.RedisClientOpt, queue string, concurrency int) error {
-	server := asynq.NewServer(redisOpt, asynq.Config{Concurrency: concurrency, Queues: map[string]int{queue: 1}, RetryDelayFunc: RetryDelay, IsFailure: IsFailure, ShutdownTimeout: 15 * time.Second})
+	server := asynq.NewServer(redisOpt, workerConfig(queue, concurrency))
 	mux := asynq.NewServeMux()
 	mux.HandleFunc("message:send", e.HandleDelivery)
 	mux.HandleFunc("campaign:generate", e.HandleGeneration)
@@ -193,13 +198,15 @@ func (e *Engine) Reconcile(ctx context.Context) error {
 	return rows.Err()
 }
 
+// Reserve 200ms for the durable ledger and consent checks between admission
+// and the provider call, avoiding a burst across the one-second boundary.
 var limitScript = redis.NewScript(`
 local t=redis.call('TIME');local now=tonumber(t[1])*1000+math.floor(tonumber(t[2])/1000)
 local cooldown=tonumber(redis.call('GET',KEYS[2]) or '0')
 if cooldown>now then return cooldown-now end
-redis.call('ZREMRANGEBYSCORE',KEYS[1],'-inf',now-1000)
+redis.call('ZREMRANGEBYSCORE',KEYS[1],'-inf',now-1200)
 if redis.call('ZCARD',KEYS[1])>=100 then
- local first=redis.call('ZRANGE',KEYS[1],0,0,'WITHSCORES');return math.max(1,tonumber(first[2])+1000-now)
+ local first=redis.call('ZRANGE',KEYS[1],0,0,'WITHSCORES');return math.max(1,tonumber(first[2])+1200-now)
 end
 redis.call('ZADD',KEYS[1],now,ARGV[1]);redis.call('PEXPIRE',KEYS[1],2000);return 0
 `)

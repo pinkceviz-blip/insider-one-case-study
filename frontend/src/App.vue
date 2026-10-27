@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { isCampaignId, campaignPath, deliveryHistoryPath, literalCount, templateError } from './security.js'
+import { campaignPath, deliveryHistoryPath, literalCount, templateError } from './security.js'
 const channelViews=[{id:'sms',label:'SMS',icon:'▤'},{id:'email',label:'Email',icon:'✉'}]
 const channelStats=ref({sms:{},email:{}}), channelStatsError=ref('')
 const queueStats=ref({sms:{},email:{}}), queueStatsError=ref(''), queueSampledAt=ref(null)
@@ -23,6 +23,7 @@ async function refreshErrors(append=false){
 async function inspectDelivery(id){
  const epoch=++detailEpoch;auditError.value='';try{const data=await api(deliveryHistoryPath(id));if(epoch===detailEpoch)deliveryDetail.value=data}catch(e){if(epoch===detailEpoch)auditError.value=e.message}
 }
+function showCampaignErrors(c){campaign.value=c;auditScope.value='selected';refreshErrors();document.querySelector('.error-panel')?.scrollIntoView({behavior:'smooth',block:'start'})}
 function closeDetail(){detailEpoch++;deliveryDetail.value=null}
 watch([auditChannel,auditKind,auditScope],()=>refreshErrors())
 let source, dashboardSource
@@ -35,12 +36,12 @@ const editable=computed(()=>campaign.value?.status==='draft')
 const invalid=computed(()=>!content.value.sms.trim()||!content.value.email_subject.trim()||!content.value.email_body.trim()||budget(content.value.sms)>160||budget(content.value.email_subject)>80||budget(content.value.email_body)>10000||/\r|\n/.test(content.value.email_subject)||Object.values(content.value).some(v=>templateError(v)))
 const statusNames={generating:'Hazırlanıyor',draft:'Taslak',approved:'Onaylandı',dispatching:'Gönderiliyor',completed:'Tamamlandı',failed:'Üretim hatası',needs_review:'İnceleme gerekiyor'}
 const deliveryLabels={accepted:'Provider kabul etti',failed:'Kalıcı hata',pending:'Kuyrukta',processing:'İşleniyor',retrying:'Yeniden denenecek',suppressed:'İzin nedeniyle iptal',unknown:'Sonucu belirsiz · manuel inceleme'}
-const campaignProgress=computed(()=>channelViews.map(channel=>{
- const counts=campaign.value?.channel_counts?.[channel.id]||{}
+const campaignProgress=c=>channelViews.map(channel=>{
+ const counts=c.channel_counts?.[channel.id]||{}
  const total=Object.values(counts).reduce((a,b)=>a+b,0)
  const finished=(counts.accepted||0)+(counts.failed||0)+(counts.suppressed||0)+(counts.unknown||0)
  return {...channel,counts,total,finished,percent:total?Math.min(100,Math.round(finished/total*100)):0}
-}))
+})
 async function api(path, options={}){
  const r=await fetch(path,{...options,headers:{'Content-Type':'application/json',...options.headers}})
  let data;try{data=await r.json()}catch{throw new Error('Sunucudan geçerli yanıt alınamadı')}
@@ -84,18 +85,18 @@ function refresh(){
   if(page.value==='monitor'&&!auditBusy.value&&errorItems.value.length<=50)refreshErrors()
  })
 }
-watch(page,()=>{error.value='';if(page.value==='monitor')refreshErrors()})
-onMounted(async()=>{refresh();try{config.value=await api('/api/config')}catch(e){error.value=e.message}const id=localStorage.getItem('studio.campaign');if(isCampaignId(id))await load(id);else if(id)localStorage.removeItem('studio.campaign')})
+watch(page,()=>{error.value='';if(page.value==='monitor')refreshErrors();window.scrollTo({top:0,left:0,behavior:'instant'})},{flush:'post'})
+onMounted(async()=>{refresh();try{config.value=await api('/api/config')}catch(e){error.value=e.message}localStorage.removeItem('studio.campaign')})
 onUnmounted(()=>{source?.close();dashboardSource?.close()})
 </script>
 
 <template>
  <div class="app-shell">
   <aside class="sidebar">
-   <a class="brand" href="#" @click.prevent="page='studio'"><span class="brandmark">◖</span> INSIDER ONE</a>
+   <a class="brand" href="#" @click.prevent="reset"><span class="brandmark">◖</span> INSIDER ONE</a>
    <div class="brand-sub">CAMPAIGN STUDIO</div>
    <nav aria-label="Ana menü">
-    <button :class="{active:page==='studio'}" @click="page='studio'"><span class="navicon">◇</span><span>Kampanya <br>stüdyosu</span><small>01</small></button>
+    <button :class="{active:page==='studio'}" @click="reset"><span class="navicon">◇</span><span>Kampanya <br>oluştur</span><small>01</small></button>
     <button :class="{active:page==='monitor'}" @click="page='monitor'"><span class="navicon">▤</span>Gönderim takibi</button>
     <button :class="{active:page==='health'}" @click="page='health'"><span class="navicon">⊙</span>Sistem sağlığı</button>
    </nav>
@@ -103,13 +104,12 @@ onUnmounted(()=>{source?.close();dashboardSource?.close()})
    <div class="sidebar-footer"><i :class="{offline:!health}"></i> {{health?'Mock provider ortamı':'Bağlantı kontrol ediliyor'}}</div>
   </aside>
   <main>
-   <header class="topbar"><div><span>PAZARLAMA</span><b class="slash">/</b><strong>{{page==='studio'?'Kampanya stüdyosu':page==='monitor'?'Gönderim takibi':'Sistem sağlığı'}}</strong></div><div class="top-right"><span class="env-badge"><i :class="{offline:!health}"></i>{{config.llm_mode==='mock'?'MOCK AI':'CLAUDE AI'}} · DENEME ORTAMI</span><span class="avatar">M</span></div></header>
+   <header class="topbar"><div><span>PAZARLAMA</span><b class="slash">/</b><strong>{{page==='studio'?'Kampanya oluştur':page==='monitor'?'Gönderim takibi':'Sistem sağlığı'}}</strong></div><div class="top-right"><span class="env-badge"><i :class="{offline:!health}"></i>{{config.llm_mode==='mock'?'MOCK AI':'CLAUDE AI'}} · DENEME ORTAMI</span><span class="avatar">M</span></div></header>
    <div class="page-content">
     <section v-if="page==='studio'" class="hero">
      <div class="hero-copy"><div class="eyebrow">◆ AI-POWERED CUSTOMER ENGAGEMENT</div><h1>Doğru kitle.<br><em>Daha güçlü etkileşim.</em></h1><p>SMS ve email kampanyalarını tek bir yerden oluştur.<br>Yapay zekâ ile hazırla, son kararı sen ver.</p><div class="hero-note"><span></span> YAPAY ZEKÂ ÖNERİR. SEN KARAR VERİRSİN.</div></div>
      <div class="hero-art" aria-hidden="true"><div class="orbit orbit-1"></div><div class="orbit orbit-2"></div><span class="orbit-text">BİR FİKİR. ÇOK ETKİ.</span><span class="spark">✳</span><div class="floating-card email-card"><span class="art-icon">✉</span><div><small>EMAIL</small><b>Sepetinde bir sürpriz var.</b><p>Bir hatırlatma, yeni bir başlangıç.</p></div><span>✦</span></div><div class="floating-card sms-card"><span class="art-icon">▤</span><div><small>SMS</small><b>Merhaba Deniz, sepetin seni bekliyor!</b><p>Kısa. Samimi. Tam zamanında.</p></div></div><span class="sample-label">ÖRNEK İÇERİK</span></div>
     </section>
-    <div v-if="page==='studio'" class="studio-toolbar"><button class="primary" :disabled="busy" @click="reset">Yeni kampanya ＋</button></div>
     <div v-if="error" class="error-banner" role="alert"><span>!</span>{{error}}<button aria-label="Uyarıyı kapat" @click="error=''">×</button></div>
     <div v-if="page==='studio'" class="studio-grid">
      <div>
@@ -126,21 +126,22 @@ onUnmounted(()=>{source?.close();dashboardSource?.close()})
     </div>
 
     <template v-if="page==='monitor'">
-     <div class="page-title"><div><div class="eyebrow">HER MESAJIN İZİNİ SÜR</div><h1>Gönderim takibi<span class="orange">.</span></h1><p>Kuyruktan provider’a, tüm süreç tek ekranda.</p></div></div>
-     <section v-if="campaign && !['draft','generating','failed'].includes(campaign.status)" class="panel delivery-panel"><div class="panel-heading"><div><div class="eyebrow muted">SEÇİLİ KAMPANYA · {{campaign.id.slice(0,8)}}</div><h2>{{campaign.proposal.segment.city}} · {{statusNames[campaign.status]}}</h2></div><span class="live-badge"><i :class="{offline:streamState!=='live'}"></i>{{streamState==='live'?'CANLI SSE':'YENİDEN BAĞLANIYOR'}}</span></div><p class="fineprint">{{campaign.brief}}</p><div class="campaign-channel-progress" v-for="channel in campaignProgress" :key="channel.id" :data-channel="channel.id">
-       <div class="progress-heading"><b>{{channel.label}} <span class="progress-count">{{fmt(channel.finished)}} / {{fmt(channel.total)}} işlendi</span></b><span>{{channel.total?'%'+channel.percent:'Alıcı yok'}}</span></div>
-       <div class="progress-track" :class="'progress-'+channel.id" role="progressbar" :aria-label="channel.label+' işlenme ilerlemesi'" :aria-valuenow="channel.percent" aria-valuemin="0" aria-valuemax="100"><div :style="{width:channel.percent+'%'}"></div></div>
-       <p class="fineprint progress-outcomes">{{fmt(channel.counts.accepted)}} provider kabulü · {{fmt(channel.counts.failed)}} kalıcı hata · {{fmt(channel.counts.suppressed)}} izin nedeniyle iptal<span v-if="channel.counts.unknown"> · {{fmt(channel.counts.unknown)}} manuel inceleme</span></p>
-      </div></section>
-     <p v-if="queueStatsError" class="audit-warning" role="alert">{{queueStatsError}}</p>
-     <p v-if="stats.unknown" class="audit-warning" role="alert">{{fmt(stats.unknown)}} mesajın provider sonucu belirsiz. Otomatik retry durduruldu; hata geçmişinden inceleyin.</p>
-     <p v-if="channelStatsError" class="audit-warning" role="alert">{{channelStatsError}}</p>
-     <section v-for="channel in channelViews" :key="channel.id" class="channel-summary" :aria-label="channel.label+' gönderim özeti'">
-      <div class="channel-summary-heading"><h2><span>{{channel.icon}}</span> {{channel.label}}</h2><span>Tüm kampanyalar · Kanal limiti 100 istek / saniye</span></div>
-      <div class="stat-grid"><div class="panel stat" v-for="(item,i) in [['Provider kabul etti',channelStats[channel.id].accepted,'↗'],['Kuyruktaki işler',queueStats[channel.id]?.available?queueStats[channel.id].outstanding:null,'◷'],['Retry bekleyen işler',queueStats[channel.id]?.available?queueStats[channel.id].retry:null,'↻'],['Kalıcı hata',channelStats[channel.id].failed,'!']]" :key="i"><div>{{item[0]}}<span>{{item[2]}}</span></div><strong>{{item[1]===null?'—':fmt(item[1])}}</strong><small>{{i===0?'Alıcıya teslim edildi anlamına gelmez':i===1?'Hazır, aktif, zamanlanmış ve retry işleri':i===2?'Geçici hatalar ve rate limit beklemeleri':channel.label+' kanalı'}}</small></div></div>
-
+     <div class="page-title"><div><div class="eyebrow">HER MESAJIN İZİNİ SÜR</div><h1>Gönderim takibi<span class="orange">.</span></h1><p>Her kampanyanın SMS ve email gönderim durumunu ayrı ayrı izle.</p></div></div>
+     <section class="campaign-history" aria-label="Kampanya gönderim geçmişi">
+      <div v-if="!campaigns.length" class="panel empty"><h3>Henüz kampanya yok</h3><p>İlk kampanyanı oluştur, gönderim durumunu burada izle.</p><button class="secondary" @click="reset">Kampanya oluştur →</button></div>
+      <article v-for="c in campaigns" :key="c.id" class="panel delivery-panel campaign-history-card">
+       <div class="panel-heading"><div><div class="eyebrow muted">{{dateTime(c.created_at)}} · {{c.id.slice(0,8)}}</div><h2>{{c.proposal?.segment?.city||'Kitle hazırlanıyor'}}</h2></div><span class="status-badge" :class="c.status">{{statusNames[c.status]}}</span></div>
+       <p class="campaign-brief">{{c.brief}}</p>
+       <p v-if="['draft','generating','failed'].includes(c.status)" class="fineprint">Henüz gönderime alınmadı.</p>
+       <div v-else class="campaign-channels">
+        <section v-for="channel in campaignProgress(c)" :key="channel.id" :aria-label="channel.label+' kampanya istatistikleri'">
+         <h3>{{channel.icon}} {{channel.label}}</h3><div class="progress-heading"><b>{{fmt(channel.finished)}} / {{fmt(channel.total)}} işlendi</b><span>{{channel.total?'%'+channel.percent:'Alıcı yok'}}</span></div><div class="progress-track" :class="'progress-'+channel.id" role="progressbar" :aria-label="channel.label+' işlenme ilerlemesi'" :aria-valuenow="channel.percent" aria-valuemin="0" aria-valuemax="100"><div :style="{width:channel.percent+'%'}"></div></div><div class="detail-grid"><div v-for="(label,key) in deliveryLabels" :key="key"><span>{{label}}</span><b>{{fmt(c.channel_counts?.[channel.id]?.[key])}}</b></div></div>
+        </section>
+       </div>
+       <p class="fineprint">Provider kabulü, alıcıya teslim edildi anlamına gelmez.</p>
+       <div class="actions"><button v-if="['draft','generating','failed'].includes(c.status)" class="secondary" @click="load(c.id)">Kampanyayı aç →</button><button class="secondary" @click="showCampaignErrors(c)">Hatalar ve retry nedenleri ↓</button></div>
+      </article>
      </section>
-
 
      <section class="panel error-panel">
       <div class="panel-heading"><div><div class="eyebrow muted">İNCELEME & DENEME GEÇMİŞİ</div><h2>Hatalar ve retry nedenleri</h2></div><button class="secondary" :disabled="auditBusy" @click="refreshErrors()">↻ Yenile</button></div>
@@ -151,7 +152,7 @@ onUnmounted(()=>{source?.close();dashboardSource?.close()})
       <div class="audit-rows"><button v-for="a in errorItems" :key="a.id" class="audit-row" @click="inspectDelivery(a.delivery_id)"><div class="audit-row-top"><b>{{a.channel.toUpperCase()}} · {{kindLabels[a.kind]||a.kind}}</b><span class="status-badge" :class="a.state==='accepted'?'completed':a.state==='failed'?'failed':'draft'">{{deliveryLabels[a.state]||a.state}}</span></div><p>{{a.message}}</p><div class="audit-meta"><span>{{dateTime(a.created_at)}}</span><span>{{a.attempt_no?'Deneme '+a.attempt_no:'Önceki sürüm kaydı'}} · {{a.http_status?'HTTP '+a.http_status:a.code}}</span><span>İncele ↗</span></div></button></div>
       <button v-if="auditCursor" class="secondary wide" :disabled="auditBusy" @click="refreshErrors(true)">Daha eski kayıtları yükle</button>
      </section>
-     <section class="panel campaigns-panel"><div class="list-heading"><span class="eyebrow muted">KAMPANYALARIN</span><span>{{campaigns.length}} kayıt</span></div><div v-if="!campaigns.length" class="empty"><span>◇</span><h3>İlk kampanyanı oluştur</h3><p>Brief’ini yaz, kitleyi keşfet, son kararı sen ver.</p><button class="secondary" @click="reset">Kampanya stüdyosuna git →</button></div><button v-for="c in campaigns" :key="c.id" class="campaign-row" @click="load(c.id)"><div><b>{{c.proposal?.segment?.city||'Kitle hazırlanıyor'}} <small>· {{c.id.slice(0,8)}}</small></b><p>{{c.brief}}</p></div><span class="status-badge" :class="c.status">{{statusNames[c.status]}}</span><span class="row-arrow">↗</span></button></section>
+
     </template>
 
     <template v-if="page==='health'"><div class="page-title"><div><div class="eyebrow">HER ŞEY KONTROL ALTINDA</div><h1>Sistem sağlığı<span class="orange">.</span></h1><p>Bağımlılıklar, kanal kuralları ve çalışma ortamı.</p></div><button class="secondary" @click="refresh">↻ Yenile</button></div><div v-if="healthError" class="error-banner" role="alert">{{healthError}}</div><div class="health-grid"><section class="panel health-card"><div class="health-icon">⊙</div><h2>Servis durumu</h2><div v-for="(label,key) in {postgres:'PostgreSQL',redis:'Redis / Asynq'}" :key="key" class="health-row"><span>{{label}}</span><span class="status-badge" :class="health?.[key]?'completed':'failed'">{{health?.[key]?'Bağlantı sağlıklı':'Erişilemiyor'}}</span></div><div class="health-row"><span>Yapay zekâ</span><b>{{config.llm_mode==='mock'?'Mock LLM':'Claude API'}}</b></div><div class="health-row"><span>Sahte kullanıcı</span><b>{{fmt(stats.users)}}</b></div></section><section class="panel health-card"><div class="health-icon">⇄</div><h2>Gönderim politikası</h2><div class="health-row"><span>SMS</span><b>100 istek / saniye</b></div><div class="health-row"><span>Email</span><b>100 istek / saniye</b></div><div class="health-row"><span>Tekrarlama koruması</span><b>Provider idempotency</b></div><div class="health-row"><span>Ortam</span><span class="status-badge draft">Yalnızca mock gönderim</span></div></section></div><section class="panel health-card"><h2>Gözlemlenebilirlik</h2><p>Endpoint’ler canlı servis verisini gösterir. Provider kabul sayısı, gerçek teslimat metriği değildir.</p><div class="endpoint-links"><a href="/health/live" target="_blank">GET /health/live ↗</a><a href="/health/ready" target="_blank">GET /health/ready ↗</a><a href="/metrics" target="_blank">GET /metrics ↗</a></div><p class="fineprint">Son kontrol: {{lastRefresh?.toLocaleTimeString('tr-TR')}}</p></section></template>

@@ -57,7 +57,6 @@ Verileri sıfırlamak istersen `docker compose down -v` named volume'ları siler
 
 ## Mimari
 
-[Servis mimarisi ve kampanya akışı diyagramları](ARCHITECTURE.md)
 
 - `api`: REST, input validation, sürüm kontrollü edit/onay ve SSE.
 - `generation-worker`: `campaign` kuyruğunda LLM adapter'ı; son JSON doğrulaması ve kitle snapshot'ı.

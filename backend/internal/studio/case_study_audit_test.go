@@ -326,7 +326,9 @@ func TestAuditMultipleWorkersThroughput(t *testing.T) {
 			start := time.Now()
 			for _, ch := range []string{"sms", "email"} {
 				for i := 0; i < 2; i++ {
-					s := asynq.NewServer(opt, asynq.Config{Concurrency: concurrency, Queues: map[string]int{"audit-" + ch: 1}, RetryDelayFunc: RetryDelay, IsFailure: IsFailure, ShutdownTimeout: time.Second})
+					config := workerConfig("audit-"+ch, concurrency)
+					config.ShutdownTimeout = time.Second
+					s := asynq.NewServer(opt, config)
 					mux := asynq.NewServeMux()
 					mux.HandleFunc("message:send", e.HandleDelivery)
 					if err := s.Start(mux); err != nil {

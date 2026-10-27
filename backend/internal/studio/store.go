@@ -46,7 +46,7 @@ func (s *Store) Campaign(ctx context.Context, id string) (Campaign, error) {
 	}
 	c.Counts = map[string]int{}
 	c.ChannelCounts = map[string]map[string]int{}
-	rows, e := s.DB.Query(ctx, "SELECT channel,state,count(*) FROM deliveries WHERE campaign_id=$1 GROUP BY channel,state", id)
+	rows, e := s.DB.Query(ctx, "SELECT channel,state,(state='retrying' AND error='rate_wait'),count(*) FROM deliveries WHERE campaign_id=$1 GROUP BY channel,state,(state='retrying' AND error='rate_wait')", id)
 	if e != nil {
 		return c, e
 	}
@@ -54,14 +54,20 @@ func (s *Store) Campaign(ctx context.Context, id string) (Campaign, error) {
 	for rows.Next() {
 		var ch, k string
 		var n int
-		if e = rows.Scan(&ch, &k, &n); e != nil {
+		var rateWaiting bool
+		if e = rows.Scan(&ch, &k, &rateWaiting, &n); e != nil {
 			return c, e
 		}
 		c.Counts[k] += n
 		if c.ChannelCounts[ch] == nil {
 			c.ChannelCounts[ch] = map[string]int{}
 		}
-		c.ChannelCounts[ch][k] = n
+		// Rate-limit scheduling is queued work, not a failed provider attempt.
+		channelState := k
+		if rateWaiting {
+			channelState = "pending"
+		}
+		c.ChannelCounts[ch][channelState] += n
 	}
 	if rows.Err() != nil {
 		return c, rows.Err()
