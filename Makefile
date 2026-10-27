@@ -5,5 +5,6 @@ down:
 	docker compose down
 test:
 	docker compose --profile test run --build --rm integration
+	docker compose --profile test run --build --rm frontend-tests
 logs:
 	docker compose logs -f --tail=80

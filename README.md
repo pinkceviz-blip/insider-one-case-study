@@ -118,3 +118,13 @@ Provider kabulünden sonra worker çökerse `inflight` kayıt `unknown` olur. So
 Bu tarihler **provider kabulünün doğrulandığı zamanı** ifade eder; gerçek alıcıya teslimat zamanı değildir. Gerçek provider'da delivery webhook'ları için ayrı `delivered_at` alanları gerekir. Önceki demo kayıtları yalnız eşleşen kalıcı provider key/receipt/payload kanıtı varsa migration sırasında provider kabul zamanı ile doldurulur.
 
 Gönderim takibinin özet ve kuyruk alanları SMS/email için ayrı gösterilir. `GET /api/stats?channel=sms` ve `GET /api/stats?channel=email` kanal bazlı sayaçları döndürür. Kanal belirtilmezse mevcut global özet korunur. Kanal filtreli outbox sayısı yalnız ilgili message:send işlerini kapsar; campaign generation işleri bu sayıya dahil değildir.
+
+## Frontend ve SQL injection güvenlik testleri
+
+`make test` artık Go entegrasyon/race testlerinden sonra Docker'da 12 Vue/Vitest/jsdom güvenlik testini ve frontend production build'ini de çalıştırır. Yalnız frontend için `cd frontend && npm ci && npm test` kullanılabilir (Docker testi host Node sürümünden bağımsızdır).
+
+Kapsam: kalıcı/stream edilmiş HTML ve hata mesajlarının metin olarak render edilmesi, localStorage ID müdahalesi, URL yol enjeksiyonu, değişken allowlist'i, SQL görünümlü brief/metnin JSON veri olarak kalması; gerçek PostgreSQL üzerinde boolean/UNION/DDL/pg_sleep payload'larıyla ID/filtre/tip doğrulaması, veri bütünlüğü ve cross-origin yazma engeli.
+
+SQL injection savunması backend'deki parametreli sorgular ve sabit sorgu yapısıdır; frontend doğrulaması tek başına güvenlik sınırı değildir. SQL anahtar kelimeleri ve apostrof metinden silinmez. ID'ler biçim allowlist'i ile doğrulanır ve URL bileşeni olarak kodlanır. Vue kullanıcı içeriğini HTML olarak çalıştırmaz. Nginx CSP, frame-ancestors/X-Frame-Options ve Permissions-Policy başlıkları gönderir. API, Origin varsa yabancı origin'den yazmayı reddeder; proxy asıl Host değerini korur.
+
+Bu testler tam kapsamlı pentest değildir. Lokal demo auth/RBAC/tenant izolasyonu içermez; bu ekler onları tamamlamaz. İnceleme bulguları `reports/security-2026-10-27.md` dosyasındadır.

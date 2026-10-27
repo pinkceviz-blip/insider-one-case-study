@@ -1,0 +1,187 @@
+=== RUN   TestCharacterBudgetExcludesOnlyWhitelistedVariables
+--- PASS: TestCharacterBudgetExcludesOnlyWhitelistedVariables (0.00s)
+=== RUN   TestPersonalizationDoesNotConsumeLiteralBudget
+--- PASS: TestPersonalizationDoesNotConsumeLiteralBudget (0.00s)
+=== RUN   TestTemplateAndRecipientValidation
+--- PASS: TestTemplateAndRecipientValidation (0.00s)
+=== RUN   TestStructuredLLMValidation
+--- PASS: TestStructuredLLMValidation (0.00s)
+=== RUN   TestMockLLMStreaming
+--- PASS: TestMockLLMStreaming (1.24s)
+=== RUN   TestPartialJSONStreaming
+--- PASS: TestPartialJSONStreaming (0.00s)
+=== RUN   TestRetryClassification
+--- PASS: TestRetryClassification (0.00s)
+=== RUN   TestIntegrationPipeline
+asynq: pid=4066 2026/10/27 08:55:59.828496 INFO: Starting processing
+asynq: pid=4066 2026/10/27 08:55:59.828735 INFO: Starting processing
+asynq: pid=4066 2026/10/27 08:55:59.828858 INFO: Starting processing
+2026/10/27 08:56:02 ERROR request failed error="Kampanya sürümü değişti veya artık düzenlenemez; sayfayı yenileyin"
+2026/10/27 08:56:02 ERROR request failed error="Kampanya sürümü değişti veya artık düzenlenemez; sayfayı yenileyin"
+=== RUN   TestIntegrationPipeline/concurrent_duplicate_and_success_timestamp
+=== RUN   TestIntegrationPipeline/persisted_retry_deadline_and_no_failure_timestamp
+=== RUN   TestIntegrationPipeline/throttle_does_not_consume_failure_budget
+=== RUN   TestIntegrationPipeline/accepted_then_worker_cancel_receipt_recovery
+=== RUN   TestIntegrationPipeline/revoked_consent_and_permanent_failure
+=== RUN   TestIntegrationPipeline/same_user_parallel_sms_email_preserves_both_dates
+=== RUN   TestIntegrationPipeline/parallel_approval_does_not_duplicate_deliveries
+=== NAME  TestIntegrationPipeline
+    integration_test.go:243: pipeline: 95 accepted, 0 failed; duplicate approval and task replay safe
+asynq: pid=4066 2026/10/27 08:56:26.562652 INFO: Starting graceful shutdown
+asynq: pid=4066 2026/10/27 08:56:27.077259 INFO: Waiting for all workers to finish...
+asynq: pid=4066 2026/10/27 08:56:27.077503 INFO: All workers have finished
+asynq: pid=4066 2026/10/27 08:56:27.080233 INFO: Exiting
+asynq: pid=4066 2026/10/27 08:56:27.080300 INFO: Starting graceful shutdown
+asynq: pid=4066 2026/10/27 08:56:27.322479 INFO: Waiting for all workers to finish...
+asynq: pid=4066 2026/10/27 08:56:27.322619 INFO: All workers have finished
+asynq: pid=4066 2026/10/27 08:56:27.325142 INFO: Exiting
+asynq: pid=4066 2026/10/27 08:56:27.325223 INFO: Starting graceful shutdown
+asynq: pid=4066 2026/10/27 08:56:28.051872 INFO: Waiting for all workers to finish...
+asynq: pid=4066 2026/10/27 08:56:28.052069 INFO: All workers have finished
+asynq: pid=4066 2026/10/27 08:56:28.054222 INFO: Exiting
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send/malformed_json
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send/unsupported_segment
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send/overlong_content
+=== RUN   TestIntegrationPipeline/outbox_recovers_redis_failure_and_crash_after_enqueue
+=== RUN   TestIntegrationPipeline/sse_reconnect_replays_only_missed_events_and_fresh_snapshot
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/429
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/503
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/timeout
+=== RUN   TestIntegrationPipeline/sql_injection_http_ids_filters_and_types
+=== RUN   TestIntegrationPipeline/sql_like_brief_and_copy_remain_literal_data
+=== RUN   TestIntegrationPipeline/cross_origin_write_cannot_create_campaign
+--- PASS: TestIntegrationPipeline (30.62s)
+    --- PASS: TestIntegrationPipeline/concurrent_duplicate_and_success_timestamp (0.04s)
+    --- PASS: TestIntegrationPipeline/persisted_retry_deadline_and_no_failure_timestamp (0.01s)
+    --- PASS: TestIntegrationPipeline/throttle_does_not_consume_failure_budget (0.00s)
+    --- PASS: TestIntegrationPipeline/accepted_then_worker_cancel_receipt_recovery (0.01s)
+    --- PASS: TestIntegrationPipeline/revoked_consent_and_permanent_failure (0.01s)
+    --- PASS: TestIntegrationPipeline/same_user_parallel_sms_email_preserves_both_dates (0.01s)
+    --- PASS: TestIntegrationPipeline/parallel_approval_does_not_duplicate_deliveries (0.01s)
+    --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send (0.02s)
+        --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send/malformed_json (0.01s)
+        --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send/unsupported_segment (0.00s)
+        --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send/overlong_content (0.00s)
+    --- PASS: TestIntegrationPipeline/outbox_recovers_redis_failure_and_crash_after_enqueue (0.10s)
+    --- PASS: TestIntegrationPipeline/sse_reconnect_replays_only_missed_events_and_fresh_snapshot (0.01s)
+    --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover (0.39s)
+        --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/429 (0.05s)
+        --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/503 (0.06s)
+        --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/timeout (0.28s)
+    --- PASS: TestIntegrationPipeline/sql_injection_http_ids_filters_and_types (0.03s)
+    --- PASS: TestIntegrationPipeline/sql_like_brief_and_copy_remain_literal_data (0.01s)
+    --- PASS: TestIntegrationPipeline/cross_origin_write_cannot_create_campaign (0.00s)
+=== RUN   TestOriginAndSecurityHeaders
+=== RUN   TestOriginAndSecurityHeaders/same_origin
+=== RUN   TestOriginAndSecurityHeaders/cross_origin
+=== RUN   TestOriginAndSecurityHeaders/opaque_origin
+=== RUN   TestOriginAndSecurityHeaders/userinfo
+=== RUN   TestOriginAndSecurityHeaders/cli_no_origin
+--- PASS: TestOriginAndSecurityHeaders (0.00s)
+    --- PASS: TestOriginAndSecurityHeaders/same_origin (0.00s)
+    --- PASS: TestOriginAndSecurityHeaders/cross_origin (0.00s)
+    --- PASS: TestOriginAndSecurityHeaders/opaque_origin (0.00s)
+    --- PASS: TestOriginAndSecurityHeaders/userinfo (0.00s)
+    --- PASS: TestOriginAndSecurityHeaders/cli_no_origin (0.00s)
+PASS
+ok  	campaignstudio/internal/studio	32.891s
+docker compose --profile test run --build --rm frontend-tests
+ Image insider-one-case-study-frontend-tests Building
+#1 [internal] load local bake definitions
+#1 reading from stdin 689B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile.test
+#2 transferring dockerfile: 163B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:24-alpine
+#3 DONE 1.2s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 58B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 138.09kB 0.0s done
+#5 DONE 0.0s
+
+#6 [1/5] FROM docker.io/library/node:24-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53
+#6 resolve docker.io/library/node:24-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 0.0s done
+#6 DONE 0.0s
+
+#7 [2/5] WORKDIR /app
+#7 CACHED
+
+#8 [3/5] COPY package*.json ./
+#8 DONE 0.0s
+
+#9 [4/5] RUN npm ci
+#9 3.482
+#9 3.482 added 111 packages, and audited 112 packages in 2s
+#9 3.482
+#9 3.482 21 packages are looking for funding
+#9 3.482   run `npm fund` for details
+#9 3.483
+#9 3.483 found 0 vulnerabilities
+#9 3.487 npm warn install-scripts 1 package has install scripts not yet covered by allowScripts:
+#9 3.487 npm warn install-scripts   esbuild@0.28.2 (postinstall: node install.js)
+#9 3.487 npm warn install-scripts
+#9 3.487 npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+#9 3.491 npm notice
+#9 3.491 npm notice New major version of npm available! 11.19.1 -> 12.2.1
+#9 3.491 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+#9 3.491 npm notice To update run: npm install -g npm@12.2.1
+#9 3.491 npm notice
+#9 DONE 3.9s
+
+#10 [5/5] COPY . .
+#10 DONE 0.2s
+
+#11 exporting to image
+#11 exporting layers
+#11 exporting layers 2.8s done
+#11 exporting manifest sha256:3067b97a38798131d77a5f466358c696146cf66c1edd2ecea623e87e3b3fd54b done
+#11 exporting config sha256:dbf64383a7d72d6eb0166a3380abf58b99aefbd54e8bb47bf3961c39b2fc0a9a done
+#11 exporting attestation manifest sha256:7ffa929a88fc26749bba5cd0b6bc00e4b6ea5020f4310964080873b4ac6bfd3e done
+#11 exporting manifest list sha256:b1baa96e7c346693de466642b5712577a363046804d6965b0fe76222616aea04 done
+#11 naming to docker.io/library/insider-one-case-study-frontend-tests:latest done
+#11 unpacking to docker.io/library/insider-one-case-study-frontend-tests:latest
+#11 unpacking to docker.io/library/insider-one-case-study-frontend-tests:latest 0.9s done
+#11 DONE 3.7s
+
+#12 resolving provenance for metadata file
+#12 DONE 0.0s
+ Image insider-one-case-study-frontend-tests Built
+ Container insider-one-case-study-frontend-tests-run-08faceea0be1 Creating
+ Container insider-one-case-study-frontend-tests-run-08faceea0be1 Created
+
+> insider-campaign-studio@1.0.0 test
+> vitest run
+
+
+ RUN  v5.0.5 /app
+
+ ✓ src/security.test.js (7 tests) 20ms
+ ✓ src/App.security.test.js (5 tests) 222ms
+
+ Test Files  2 passed (2)
+      Tests  12 passed (12)
+   Start at  08:56:42
+   Duration  1.70s (environment 62%, transform 20%, tests 10%, import 7%, worker 1%)
+
+
+> insider-campaign-studio@1.0.0 build
+> vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 11 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  0.42 kB │ gzip:  0.30 kB
+dist/assets/index-B2sdrNC0.css  20.42 kB │ gzip:  5.45 kB
+dist/assets/index-DVKq6nXA.js   97.95 kB │ gzip: 37.22 kB
+✓ built in 906ms

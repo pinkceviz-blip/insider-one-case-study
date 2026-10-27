@@ -53,6 +53,9 @@ func scanAttempt(rows pgx.Rows) (AttemptView, error) {
 func (e *Engine) ErrorList(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	campaign := q.Get("campaign_id")
+	if campaign != "" && !requireID(w, campaign, campaignIDPattern) {
+		return
+	}
 	channel := q.Get("channel")
 	kind := q.Get("kind")
 	cursor := int64(0)
@@ -104,6 +107,9 @@ func (e *Engine) ErrorList(w http.ResponseWriter, r *http.Request) {
 }
 func (e *Engine) DeliveryHistory(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+	if !requireID(w, id, deliveryIDPattern) {
+		return
+	}
 	var campaign, ch, state, code string
 	var attempts, failures int
 	var next *time.Time

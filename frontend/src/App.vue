@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { isCampaignId, campaignPath, deliveryHistoryPath, literalCount, templateError } from './security.js'
 const channelViews=[{id:'sms',label:'SMS',icon:'▤'},{id:'email',label:'Email',icon:'✉'}]
 const channelStats=ref({sms:{},email:{}}), channelStatsError=ref('')
 const page=ref('studio'), step=ref(1), brief=ref("Son 30 günde sepetine ürün ekleyip alışveriş yapmayan İstanbul'daki kullanıcılara %30 indirim hatırlatması gönder. Samimi ama kısa olsun.")
@@ -17,18 +18,18 @@ async function refreshErrors(append=false){
  try{const data=await api('/api/errors?'+params);if(epoch!==auditEpoch)return;errorItems.value=append?[...errorItems.value,...data.items]:data.items;auditCursor.value=data.next_cursor}catch(e){if(epoch===auditEpoch)auditError.value=e.message}finally{if(epoch===auditEpoch)auditBusy.value=false}
 }
 async function inspectDelivery(id){
- const epoch=++detailEpoch;auditError.value='';try{const data=await api(`/api/deliveries/${id}/attempts`);if(epoch===detailEpoch)deliveryDetail.value=data}catch(e){if(epoch===detailEpoch)auditError.value=e.message}
+ const epoch=++detailEpoch;auditError.value='';try{const data=await api(deliveryHistoryPath(id));if(epoch===detailEpoch)deliveryDetail.value=data}catch(e){if(epoch===detailEpoch)auditError.value=e.message}
 }
 function closeDetail(){detailEpoch++;deliveryDetail.value=null}
 watch([auditChannel,auditKind,auditScope],()=>refreshErrors())
 let source, timer, refreshRunning=false
 const count=s=>Array.from(s||'').length
-const budget=s=>count((s||'').replace(/\{\{\s*first_name\s*\}\}/g,''))
+const budget=literalCount
 const preview=s=>(s||'').replace(/\{\{\s*first_name\s*\}\}/g,'Deniz')
 const fmt=n=>new Intl.NumberFormat('tr-TR').format(n||0)
 const generating=computed(()=>campaign.value?.status==='generating')
 const editable=computed(()=>campaign.value?.status==='draft')
-const invalid=computed(()=>!content.value.sms.trim()||!content.value.email_subject.trim()||!content.value.email_body.trim()||budget(content.value.sms)>160||budget(content.value.email_subject)>80||budget(content.value.email_body)>10000||/\r|\n/.test(content.value.email_subject))
+const invalid=computed(()=>!content.value.sms.trim()||!content.value.email_subject.trim()||!content.value.email_body.trim()||budget(content.value.sms)>160||budget(content.value.email_subject)>80||budget(content.value.email_body)>10000||/\r|\n/.test(content.value.email_subject)||Object.values(content.value).some(v=>templateError(v)))
 const statusNames={generating:'Hazırlanıyor',draft:'Taslak',approved:'Onaylandı',dispatching:'Gönderiliyor',completed:'Tamamlandı',failed:'Üretim hatası'}
 const deliveryLabels={accepted:'Provider kabul etti',failed:'Kalıcı hata',pending:'Kuyrukta',processing:'İşleniyor',retrying:'Yeniden denenecek',suppressed:'İzin nedeniyle iptal'}
 const counts=computed(()=>campaign.value?.counts||{})
@@ -41,7 +42,7 @@ async function api(path, options={}){
  if(!r.ok)throw new Error(data.error||'İşlem tamamlanamadı');return data
 }
 function connect(id){
- source?.close();streamState.value='connecting';source=new EventSource(`/api/campaigns/${id}/events`)
+ source?.close();streamState.value='connecting';source=new EventSource(campaignPath(id,'/events'))
  source.onopen=()=>streamState.value='live';source.onerror=()=>streamState.value='reconnecting'
  source.addEventListener('generation.started',()=>{if(campaign.value?.id!==id)return;content.value={sms:'',email_subject:'',email_body:''}})
  source.addEventListener('content.delta',event=>{if(campaign.value?.id!==id||campaign.value?.status!=='generating')return;const d=JSON.parse(event.data);if(Object.hasOwn(content.value,d.field))content.value[d.field]+=d.delta})
@@ -52,14 +53,14 @@ async function generate(){
  try{const c=await api('/api/campaigns',{method:'POST',body:JSON.stringify({brief:brief.value})});content.value={sms:'',email_subject:'',email_body:''};campaign.value={...c,proposal:{},audience:{},counts:{}};step.value=2;localStorage.setItem('studio.campaign',c.id);connect(c.id)}catch(e){error.value=e.message}finally{busy.value=false}
 }
 async function save(){
- busy.value=true;error.value='';try{campaign.value=await api(`/api/campaigns/${campaign.value.id}`,{method:'PATCH',body:JSON.stringify({version:campaign.value.version,content:content.value})});step.value=3;consent.value=false}catch(e){error.value=e.message}finally{busy.value=false}
+ busy.value=true;error.value='';try{campaign.value=await api(campaignPath(campaign.value.id),{method:'PATCH',body:JSON.stringify({version:campaign.value.version,content:content.value})});step.value=3;consent.value=false}catch(e){error.value=e.message}finally{busy.value=false}
 }
 async function approve(){
  if(!consent.value||busy.value)return;busy.value=true;error.value=''
- try{await api(`/api/campaigns/${campaign.value.id}/approve`,{method:'POST',body:JSON.stringify({version:campaign.value.version})});campaign.value=await api(`/api/campaigns/${campaign.value.id}`);page.value='monitor';await refresh()}catch(e){error.value=e.message}finally{busy.value=false}
+ try{await api(campaignPath(campaign.value.id,'/approve'),{method:'POST',body:JSON.stringify({version:campaign.value.version})});campaign.value=await api(campaignPath(campaign.value.id));page.value='monitor';await refresh()}catch(e){error.value=e.message}finally{busy.value=false}
 }
 async function load(id){
- busy.value=true;error.value='';try{const c=await api(`/api/campaigns/${id}`);campaign.value=c;brief.value=c.brief;content.value={...c.proposal.content};localStorage.setItem('studio.campaign',id);step.value=c.status==='generating'||c.status==='draft'?2:3;page.value=c.status==='draft'||c.status==='generating'?'studio':'monitor';connect(id)}catch(e){error.value=e.message}finally{busy.value=false}
+ busy.value=true;error.value='';try{const c=await api(campaignPath(id));campaign.value=c;brief.value=c.brief;content.value={...c.proposal.content};localStorage.setItem('studio.campaign',id);step.value=c.status==='generating'||c.status==='draft'?2:3;page.value=c.status==='draft'||c.status==='generating'?'studio':'monitor';connect(id)}catch(e){error.value=e.message}finally{busy.value=false}
 }
 function reset(){source?.close();campaign.value=null;step.value=1;page.value='studio';content.value={sms:'',email_subject:'',email_body:''};error.value='';consent.value=false;localStorage.removeItem('studio.campaign')}
 async function refresh(){
@@ -74,7 +75,7 @@ async function refresh(){
  lastRefresh.value=new Date();refreshRunning=false
 }
 watch(page,()=>{error.value='';refresh();if(page.value==='monitor')refreshErrors()})
-onMounted(async()=>{try{config.value=await api('/api/config')}catch(e){error.value=e.message}await refresh();const id=localStorage.getItem('studio.campaign');if(id)await load(id);timer=setInterval(refresh,4000)})
+onMounted(async()=>{try{config.value=await api('/api/config')}catch(e){error.value=e.message}await refresh();const id=localStorage.getItem('studio.campaign');if(isCampaignId(id))await load(id);else if(id)localStorage.removeItem('studio.campaign');timer=setInterval(refresh,4000)})
 onUnmounted(()=>{source?.close();clearInterval(timer)})
 </script>
 

@@ -1,0 +1,23 @@
+{
+  "headers": {
+    "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+    "x-frame-options": "DENY",
+    "x-content-type-options": "nosniff",
+    "permissions-policy": "camera=(), microphone=(), geolocation=()",
+    "referrer-policy": "same-origin"
+  },
+  "https://evil.example": {
+    "status": 403,
+    "body": {
+      "error": "İstek kaynağına izin verilmiyor"
+    }
+  },
+  "http://localhost:18080": {
+    "status": 202,
+    "body": {
+      "id": "a9bb5e4e2a388a053435ac49445d9dc6",
+      "status": "generating"
+    }
+  },
+  "passed": true
+}

@@ -93,6 +93,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+  frontend-tests:
+    profiles: [test]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.test
 volumes:
   pgdata:
   redisdata:

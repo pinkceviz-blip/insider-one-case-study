@@ -118,6 +118,9 @@ func (e *Engine) Handler(mode string) http.Handler {
 		writeJSON(w, 200, items)
 	})
 	mux.HandleFunc("GET /api/campaigns/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if !requireID(w, r.PathValue("id"), campaignIDPattern) {
+			return
+		}
 		c, err := e.Store.Campaign(r.Context(), r.PathValue("id"))
 		if err != nil {
 			fail(w, err)
@@ -126,6 +129,9 @@ func (e *Engine) Handler(mode string) http.Handler {
 		writeJSON(w, 200, c)
 	})
 	mux.HandleFunc("PATCH /api/campaigns/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if !requireID(w, r.PathValue("id"), campaignIDPattern) {
+			return
+		}
 		var in struct {
 			Version int     `json:"version"`
 			Content Content `json:"content"`
@@ -156,6 +162,9 @@ func (e *Engine) Handler(mode string) http.Handler {
 		writeJSON(w, 200, updated)
 	})
 	mux.HandleFunc("POST /api/campaigns/{id}/approve", func(w http.ResponseWriter, r *http.Request) {
+		if !requireID(w, r.PathValue("id"), campaignIDPattern) {
+			return
+		}
 		var in struct {
 			Version int `json:"version"`
 		}
@@ -205,7 +214,7 @@ func (e *Engine) Handler(mode string) http.Handler {
 			fmt.Fprintf(w, "# TYPE studio_%s gauge\nstudio_%s %d\n", key, key, stats[key])
 		}
 	})
-	return mux
+	return securityHeadersAndOrigin(mux)
 }
 func (e *Engine) Stats(ctx context.Context, channels ...string) (map[string]int, error) {
 	channel := ""
@@ -254,6 +263,9 @@ func (e *Engine) Stats(ctx context.Context, channels ...string) (map[string]int,
 }
 func (e *Engine) SSE(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+	if !requireID(w, id, campaignIDPattern) {
+		return
+	}
 	if _, err := e.Store.Campaign(r.Context(), id); err != nil {
 		fail(w, err)
 		return

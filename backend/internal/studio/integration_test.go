@@ -271,6 +271,7 @@ func TestIntegrationPipeline(t *testing.T) {
 	}
 	servers = nil
 	exerciseAcceptance(t, ctx, engine, created.ID, opt, api.URL)
+	exerciseSecurity(t, ctx, engine, api.URL)
 }
 
 func providerHash(key string) int { h := sha256.Sum256([]byte(key)); return int(h[0]) }
