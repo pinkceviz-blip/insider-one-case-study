@@ -71,7 +71,7 @@ Redis kaybında, dispatcher her dakika 10 dakikadan uzun süredir ilerlemeyen de
 
 SMS 160, email konusu 80 **literal Unicode code point** ile sınırlıdır. `{{first_name}}` placeholder'ı ve değeri bütçeye dahil değildir (istenen özel kural). İsim en fazla 100 code point; eksik isim `arkadaşım`. Email gövdesi düz metindir, 10.000 literal karakter. Gerçek SMS segment/encoding hesabı yapılmaz.
 
-SSE, PostgreSQL `events` tablosundaki ID'lerle replay yapar; tarayıcı `Last-Event-ID` ile devam edebilir. Canlı delivery sayaçları snapshot olarak gelir. Dashboard'un global özeti dört saniyede bir yenilenir. `accepted`, mock provider'ın isteği kabul etmesidir; gerçek alıcı teslimatı anlamına gelmez.
+SSE, PostgreSQL `events` tablosundaki ID'lerle replay yapar; tarayıcı `Last-Event-ID` ile devam edebilir. Canlı delivery sayaçları snapshot olarak gelir. Dashboard global özeti `/api/dashboard/events` üzerinden SSE ile akar; tarayıcıda periyodik REST yenilemesi yoktur. Her yeniden bağlantıda tam güncel snapshot gönderilir. `accepted`, mock provider'ın isteği kabul etmesidir; gerçek alıcı teslimatı anlamına gelmez.
 
 ## API
 
@@ -128,3 +128,18 @@ Kapsam: kalıcı/stream edilmiş HTML ve hata mesajlarının metin olarak render
 SQL injection savunması backend'deki parametreli sorgular ve sabit sorgu yapısıdır; frontend doğrulaması tek başına güvenlik sınırı değildir. SQL anahtar kelimeleri ve apostrof metinden silinmez. ID'ler biçim allowlist'i ile doğrulanır ve URL bileşeni olarak kodlanır. Vue kullanıcı içeriğini HTML olarak çalıştırmaz. Nginx CSP, frame-ancestors/X-Frame-Options ve Permissions-Policy başlıkları gönderir. API, Origin varsa yabancı origin'den yazmayı reddeder; proxy asıl Host değerini korur.
 
 Bu testler tam kapsamlı pentest değildir. Lokal demo auth/RBAC/tenant izolasyonu içermez; bu ekler onları tamamlamaz. İnceleme bulguları `reports/security-2026-10-27.md` dosyasındadır.
+
+## Gerçek kuyruk görünümü
+
+“Yeni kampanya” yalnız Kampanya stüdyosundadır. Gönderim takibindeki “Kuyruktaki işler” DB pending/processing toplamı yerine `GET /api/queues` üzerinden gerçek Asynq/Redis değerini gösterir: pending + active + scheduled + retry + aggregating. Completed ve archived toplamın dışında tutulur. Retry mesajları da kuyrukta beklediğinden toplamda yer alır.
+
+Kuyruklar ve DB sayaçları sunucuda 500 ms aralıkla ölçülür; yalnız değişen snapshot SSE ile iletilir. Asynq public queue-change subscription sunmadığı için bu sunucu ölçümü kullanılır. Tarayıcıda setInterval/polling yoktur; 15 saniyelik SSE heartbeat bağlantıyı korur. Hazır işler hızlı tüketilebilir, bu yüzden yalnız pending sayısına bakarak kuyruk boş denemez. Redis’te bağlantı hatası sıfır yerine “—” ve uyarı olarak gösterilir. “Redis’e aktarılacak (outbox)” ayrı bir kalıcı kayıt sayacıdır. Asynq teknik arşivi ile provider kaynaklı kalıcı mesaj hataları farklı metriklerdir.
+
+
+### Güvenilirlik politikaları (27 Ekim 2026)
+
+- Brief'te açıkça yazılmış İstanbul/Ankara/İzmir ve sayısal gün aralığı, LLM segmentiyle üretimde ve son onayda karşılaştırılır. Uyuşmazlık gönderime geçmez; birden fazla şehir veya farklı gün aralıkları açıklığa kavuşturulmalıdır. Bu, serbest doğal dil anlamının tamamını doğrulayan bir mekanizma değildir.
+- Provider adaptörünün `SupportsIdempotency()` sözleşmesi, aynı anahtarın retry süresi boyunca aynı dış yan etkiyi temsil ettiğini garanti etmelidir. Dahili HTTP mock bu garantiyi kalıcı provider kaydıyla sağlar. Yalnız receipt sorgusu yapabilmek, negatif sonucun kesin olduğu anlamına gelmez.
+- Bu garantiyi vermeyen adaptörde ilk belirsiz hata veya yarım kalmış deneme `unknown` durumuna alınır. Yeni Send yapılmaz, sent tarihi yazılmaz, campaign `needs_review` olur. SSE/dashboard ve hata geçmişi manuel incelemeyi gösterir. Otomatik veya körlemesine manuel resend endpoint'i yoktur; dış kabul doğrulanmadan tekrar göndermek güvenli değildir. Bu politika duplicate riskini önlerken teslimatın tamamlanmasını garanti etmez. Adaptör eklenirken sözleşme gerçek provider'ın retention süresine göre değerlendirilmelidir.
+- Varsayılan `CAMPAIGN_TTL=0s`: eski sabit 24 saatlik kesme kaldırılmıştır. İsteğe bağlı `CAMPAIGN_TTL=72h` gibi bir işletme süresi tanımlanabilir; ilgili süre aşılırsa yeni Send durur. Önceki kabulü doğrulayan receipt sorgusu süreden önce çalışır. Bu ayar bütün backend worker instance'larında aynı olmalıdır.
+- Kanal başına 100/s değişmedi. 10 milyon/kanal için ideal alt sınır 27 saat 46 dakika 40 saniyedir; retry, diğer kampanyalar ve gerçek throughput süreyi uzatır. Süresiz kuyruk kapasite garantisi değildir; backlog ve oldest-message-age izlenmelidir.

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hibiken/asynq"
 	"io"
 	"log/slog"
 	"net/http"
@@ -62,6 +61,8 @@ func (e *Engine) Handler(mode string) http.Handler {
 	})
 	mux.HandleFunc("GET /api/errors", e.ErrorList)
 	mux.HandleFunc("GET /api/deliveries/{id}/attempts", e.DeliveryHistory)
+	mux.HandleFunc("GET /api/queues", e.Queues)
+	mux.HandleFunc("GET /api/dashboard/events", e.DashboardSSE)
 	mux.HandleFunc("GET /api/config", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]any{"llm_mode": mode, "channels": e.Registry.Names(), "limits": map[string]int{"brief": 4000, "sms": 160, "email_subject": 80, "email_body": 10000}, "personalization_excluded": true})
 	})
@@ -86,34 +87,10 @@ func (e *Engine) Handler(mode string) http.Handler {
 		writeJSON(w, 202, map[string]string{"id": id, "status": "generating"})
 	})
 	mux.HandleFunc("GET /api/campaigns", func(w http.ResponseWriter, r *http.Request) {
-		rows, err := e.Store.DB.Query(r.Context(), "SELECT id FROM campaigns ORDER BY created_at DESC LIMIT 100")
+		items, err := e.CampaignList(r.Context())
 		if err != nil {
 			fail(w, err)
 			return
-		}
-		var ids []string
-		for rows.Next() {
-			var id string
-			if err = rows.Scan(&id); err != nil {
-				rows.Close()
-				fail(w, err)
-				return
-			}
-			ids = append(ids, id)
-		}
-		rows.Close()
-		if rows.Err() != nil {
-			fail(w, rows.Err())
-			return
-		}
-		items := []Campaign{}
-		for _, id := range ids {
-			c, err := e.Store.Campaign(r.Context(), id)
-			if err != nil {
-				fail(w, err)
-				return
-			}
-			items = append(items, c)
 		}
 		writeJSON(w, 200, items)
 	})
@@ -181,6 +158,10 @@ func (e *Engine) Handler(mode string) http.Handler {
 			writeJSON(w, 422, map[string]string{"error": err.Error()})
 			return
 		}
+		if err = ValidateBriefSegment(c.Brief, c.Proposal.Segment); err != nil {
+			writeJSON(w, 422, map[string]string{"error": err.Error()})
+			return
+		}
 		if err = e.Store.Approve(r.Context(), c.ID, in.Version, e.Registry.Names()); err != nil {
 			fail(w, err)
 			return
@@ -210,7 +191,7 @@ func (e *Engine) Handler(mode string) http.Handler {
 			return
 		}
 		w.Header().Set("Content-Type", "text/plain; version=0.0.4")
-		for _, key := range []string{"accepted", "failed", "pending", "processing", "retrying", "suppressed", "retry_attempts", "outbox_pending", "provider_accepted"} {
+		for _, key := range []string{"accepted", "failed", "unknown", "pending", "processing", "retrying", "suppressed", "retry_attempts", "outbox_pending", "provider_accepted"} {
 			fmt.Fprintf(w, "# TYPE studio_%s gauge\nstudio_%s %d\n", key, key, stats[key])
 		}
 	})
@@ -329,15 +310,4 @@ func (e *Engine) SSE(w http.ResponseWriter, r *http.Request) {
 		case <-ticker.C:
 		}
 	}
-}
-
-// QueueSnapshot is separate from durable business counters.
-func QueueSnapshot(inspector *asynq.Inspector, names []string) map[string]int {
-	out := map[string]int{}
-	for _, name := range names {
-		if q, err := inspector.GetQueueInfo(name); err == nil {
-			out[name+"_pending"] = q.Pending
-		}
-	}
-	return out
 }

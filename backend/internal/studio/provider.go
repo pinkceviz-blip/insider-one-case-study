@@ -20,6 +20,8 @@ type HTTPProvider struct {
 	Client *http.Client
 }
 
+func (p *HTTPProvider) SupportsIdempotency() bool { return true }
+
 func (p *HTTPProvider) Send(ctx context.Context, key string, m Message) (string, error) {
 	b, _ := json.Marshal(m)
 	req, e := http.NewRequestWithContext(ctx, "POST", p.URL+"/send", bytes.NewReader(b))
@@ -240,10 +242,11 @@ func ExplainCode(code string) string {
 		"network_error": "Provider bağlantısı kurulamadı veya yanıt bağlantısı kesildi.", "network_or_timeout": "Provider bağlantı hatası veya zaman aşımı (önceki sürüm kaydı).",
 		"request_cancelled": "Worker isteği iptal edildi; provider sonucu sonraki işlemde sorgulanır.",
 		"invalid_response":  "Provider geçerli bir kabul kimliği döndürmedi.", "lookup_unavailable": "Provider kabul kaydı sorgulanamadı; yeni mesaj gönderilmedi.",
-		"lookup_invalid_response": "Provider kabul kaydı yanıtı geçersiz; yeni mesaj gönderilmedi.",
-		"worker_interrupted":      "Önceki deneme tamamlanmadan worker durdu veya DB bağlantısı kesildi; kabul kaydı kontrol edilir.",
-		"attempts_exhausted":      "Kalıcı retry hata bütçesi tükendi; son kabul kaydı sorgusunda mesaj bulunamadı.",
-		"campaign_expired":        "Kampanyanın 24 saatlik gönderim süresi doldu.", "consent_revoked": "Alıcının kanal izni kaldırıldı.",
+		"lookup_invalid_response":  "Provider kabul kaydı yanıtı geçersiz; yeni mesaj gönderilmedi.",
+		"worker_interrupted":       "Önceki deneme tamamlanmadan worker durdu veya DB bağlantısı kesildi; kabul kaydı kontrol edilir.",
+		"attempts_exhausted":       "Kalıcı retry hata bütçesi tükendi; son kabul kaydı sorgusunda mesaj bulunamadı.",
+		"provider_outcome_unknown": "Provider sonucu belirsiz; otomatik retry durduruldu. Manuel kabul doğrulaması gerekiyor.",
+		"campaign_expired":         "Kampanyanın yapılandırılmış gönderim süresi doldu.", "consent_revoked": "Alıcının kanal izni kaldırıldı.",
 		"render_validation": "Kişiselleştirilmiş içerik doğrulanamadı.", "limiter_unavailable": "Redis hız sınırlayıcıya ulaşılamadı; güvenli biçimde gönderim ertelendi.",
 		"rate_wait": "Kanalın ortak hız sınırı nedeniyle bekleniyor.", "unknown_channel": "Kanal kayıtlı değil.", "provider_missing": "Kanalın provider adapter'ı kayıtlı değil.",
 	}

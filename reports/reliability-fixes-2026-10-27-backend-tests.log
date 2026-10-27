@@ -1,0 +1,475 @@
+ Container insider-reliability-redis-1 Running
+ Container insider-reliability-postgres-1 Running
+ Container insider-reliability-postgres-1 Waiting
+ Container insider-reliability-redis-1 Waiting
+ Container insider-reliability-redis-1 Healthy
+ Container insider-reliability-postgres-1 Healthy
+ Container insider-reliability-integration-run-5a045f7897d9 Creating
+ Container insider-reliability-integration-run-5a045f7897d9 Created
+?   	campaignstudio/cmd/studio	[no test files]
+=== RUN   TestAuditLLMInvalidMatrix
+=== RUN   TestAuditLLMInvalidMatrix/unknown_field
+    case_study_audit_test.go:112: rejected=json: unknown field "sql" recipients=0 deliveries=0
+=== RUN   TestAuditLLMInvalidMatrix/null_days
+    case_study_audit_test.go:112: rejected=Gün aralığı 1–365 olmalı recipients=0 deliveries=0
+=== RUN   TestAuditLLMInvalidMatrix/operator
+    case_study_audit_test.go:112: rejected=json: unknown field "operator" recipients=0 deliveries=0
+=== RUN   TestAuditLLMInvalidMatrix/unsupported_filter
+    case_study_audit_test.go:112: rejected=Desteklenmeyen şehir recipients=0 deliveries=0
+=== RUN   TestAuditLLMInvalidMatrix/null_content
+    case_study_audit_test.go:112: rejected=sms: İçerik boş olamaz recipients=0 deliveries=0
+=== RUN   TestAuditLLMInvalidMatrix/null_root
+    case_study_audit_test.go:112: rejected=Gün aralığı 1–365 olmalı recipients=0 deliveries=0
+=== RUN   TestAuditLLMInvalidMatrix/wrong_type
+    case_study_audit_test.go:112: rejected=json: cannot unmarshal string into Go struct field Segment.segment.days of type int recipients=0 deliveries=0
+=== RUN   TestAuditLLMInvalidMatrix/missing_city
+    case_study_audit_test.go:112: rejected=Desteklenmeyen şehir recipients=0 deliveries=0
+=== RUN   TestAuditLLMInvalidMatrix/malformed
+    case_study_audit_test.go:112: rejected=unexpected EOF recipients=0 deliveries=0
+--- PASS: TestAuditLLMInvalidMatrix (0.57s)
+    --- PASS: TestAuditLLMInvalidMatrix/unknown_field (0.02s)
+    --- PASS: TestAuditLLMInvalidMatrix/null_days (0.00s)
+    --- PASS: TestAuditLLMInvalidMatrix/operator (0.00s)
+    --- PASS: TestAuditLLMInvalidMatrix/unsupported_filter (0.00s)
+    --- PASS: TestAuditLLMInvalidMatrix/null_content (0.00s)
+    --- PASS: TestAuditLLMInvalidMatrix/null_root (0.00s)
+    --- PASS: TestAuditLLMInvalidMatrix/wrong_type (0.00s)
+    --- PASS: TestAuditLLMInvalidMatrix/missing_city (0.00s)
+    --- PASS: TestAuditLLMInvalidMatrix/malformed (0.00s)
+=== RUN   TestAuditSemanticMismatchBlocked
+--- PASS: TestAuditSemanticMismatchBlocked (0.40s)
+=== RUN   TestAuditNoProviderIdempotencyStopsAmbiguousRetry
+--- PASS: TestAuditNoProviderIdempotencyStopsAmbiguousRetry (0.34s)
+=== RUN   TestAuditCrashChild
+    case_study_audit_test.go:189: subprocess helper
+--- SKIP: TestAuditCrashChild (0.00s)
+=== RUN   TestAuditSIGKILLAfterProviderAcceptance
+    case_study_audit_test.go:284: SIGKILL accepted-before-response: receipt recovered, one provider send, state accepted
+--- PASS: TestAuditSIGKILLAfterProviderAcceptance (0.40s)
+=== RUN   TestAuditMultipleWorkersThroughput
+=== RUN   TestAuditMultipleWorkersThroughput/two_instances_per_channel_concurrency_1
+asynq: pid=4109 2026/10/27 10:41:44.347654 INFO: Starting processing
+asynq: pid=4109 2026/10/27 10:41:44.347795 INFO: Starting processing
+asynq: pid=4109 2026/10/27 10:41:44.347909 INFO: Starting processing
+asynq: pid=4109 2026/10/27 10:41:44.348415 INFO: Starting processing
+    case_study_audit_test.go:368: channel=sms instances=2 concurrency=1 requests=120 max_rolling_second=100 elapsed=5.717501793s
+    case_study_audit_test.go:368: channel=email instances=2 concurrency=1 requests=120 max_rolling_second=100 elapsed=5.717501793s
+asynq: pid=4109 2026/10/27 10:41:50.070452 INFO: Starting graceful shutdown
+asynq: pid=4109 2026/10/27 10:41:51.360109 INFO: Waiting for all workers to finish...
+asynq: pid=4109 2026/10/27 10:41:51.360454 INFO: All workers have finished
+asynq: pid=4109 2026/10/27 10:41:51.363600 INFO: Exiting
+asynq: pid=4109 2026/10/27 10:41:51.363708 INFO: Starting graceful shutdown
+asynq: pid=4109 2026/10/27 10:41:51.668526 INFO: Waiting for all workers to finish...
+asynq: pid=4109 2026/10/27 10:41:51.668807 INFO: All workers have finished
+asynq: pid=4109 2026/10/27 10:41:51.670975 INFO: Exiting
+asynq: pid=4109 2026/10/27 10:41:51.671054 INFO: Starting graceful shutdown
+asynq: pid=4109 2026/10/27 10:41:52.476249 INFO: Waiting for all workers to finish...
+asynq: pid=4109 2026/10/27 10:41:52.476481 INFO: All workers have finished
+asynq: pid=4109 2026/10/27 10:41:52.477764 INFO: Exiting
+asynq: pid=4109 2026/10/27 10:41:52.477818 INFO: Starting graceful shutdown
+asynq: pid=4109 2026/10/27 10:41:53.680457 INFO: Waiting for all workers to finish...
+asynq: pid=4109 2026/10/27 10:41:53.680664 INFO: All workers have finished
+asynq: pid=4109 2026/10/27 10:41:53.682219 INFO: Exiting
+=== RUN   TestAuditMultipleWorkersThroughput/two_instances_per_channel_concurrency_8
+asynq: pid=4109 2026/10/27 10:41:53.896736 INFO: Starting processing
+asynq: pid=4109 2026/10/27 10:41:53.896960 INFO: Starting processing
+asynq: pid=4109 2026/10/27 10:41:53.897126 INFO: Starting processing
+asynq: pid=4109 2026/10/27 10:41:53.897355 INFO: Starting processing
+    case_study_audit_test.go:368: channel=sms instances=2 concurrency=8 requests=120 max_rolling_second=100 elapsed=5.632548294s
+    case_study_audit_test.go:368: channel=email instances=2 concurrency=8 requests=120 max_rolling_second=100 elapsed=5.632548294s
+asynq: pid=4109 2026/10/27 10:41:59.530097 INFO: Starting graceful shutdown
+asynq: pid=4109 2026/10/27 10:42:00.493927 INFO: Waiting for all workers to finish...
+asynq: pid=4109 2026/10/27 10:42:00.494200 INFO: All workers have finished
+asynq: pid=4109 2026/10/27 10:42:00.499425 INFO: Exiting
+asynq: pid=4109 2026/10/27 10:42:00.499546 INFO: Starting graceful shutdown
+asynq: pid=4109 2026/10/27 10:42:00.859115 INFO: Waiting for all workers to finish...
+asynq: pid=4109 2026/10/27 10:42:00.859540 INFO: All workers have finished
+asynq: pid=4109 2026/10/27 10:42:00.861388 INFO: Exiting
+asynq: pid=4109 2026/10/27 10:42:00.861503 INFO: Starting graceful shutdown
+asynq: pid=4109 2026/10/27 10:42:00.969713 INFO: Waiting for all workers to finish...
+asynq: pid=4109 2026/10/27 10:42:00.969906 INFO: All workers have finished
+asynq: pid=4109 2026/10/27 10:42:00.972594 INFO: Exiting
+asynq: pid=4109 2026/10/27 10:42:00.972699 INFO: Starting graceful shutdown
+asynq: pid=4109 2026/10/27 10:42:01.678043 INFO: Waiting for all workers to finish...
+asynq: pid=4109 2026/10/27 10:42:01.678211 INFO: All workers have finished
+asynq: pid=4109 2026/10/27 10:42:01.679715 INFO: Exiting
+--- PASS: TestAuditMultipleWorkersThroughput (18.04s)
+    --- PASS: TestAuditMultipleWorkersThroughput/two_instances_per_channel_concurrency_1 (9.56s)
+    --- PASS: TestAuditMultipleWorkersThroughput/two_instances_per_channel_concurrency_8 (7.99s)
+=== RUN   TestAuditBoundedCapacity
+=== RUN   TestAuditBoundedCapacity/5000
+    case_study_audit_test.go:412: users=5000 segment_snapshot=22.830833ms approval=26.465709ms deliveries=598 go_heap_before=3465616 go_heap_after=3488704 pool_max=32 acquired=0 explain=[
+          {
+            "Plan": {
+              "Node Type": "Bitmap Heap Scan",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Relation Name": "users",
+              "Alias": "users",
+              "Startup Cost": 4.30,
+              "Total Cost": 11.31,
+              "Plan Rows": 2,
+              "Plan Width": 8,
+              "Actual Startup Time": 0.040,
+              "Actual Total Time": 0.194,
+              "Actual Rows": 669,
+              "Actual Loops": 1,
+              "Recheck Cond": "((city = 'İstanbul'::text) AND (cart_at >= (now() - '30 days'::interval)) AND (NOT purchased))",
+              "Rows Removed by Index Recheck": 0,
+              "Exact Heap Blocks": 68,
+              "Lossy Heap Blocks": 0,
+              "Shared Hit Blocks": 70,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Bitmap Index Scan",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Index Name": "users_segment_idx",
+                  "Startup Cost": 0.00,
+                  "Total Cost": 4.30,
+                  "Plan Rows": 2,
+                  "Plan Width": 0,
+                  "Actual Startup Time": 0.030,
+                  "Actual Total Time": 0.030,
+                  "Actual Rows": 669,
+                  "Actual Loops": 1,
+                  "Index Cond": "((city = 'İstanbul'::text) AND (cart_at >= (now() - '30 days'::interval)))",
+                  "Shared Hit Blocks": 2,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                }
+              ]
+            },
+            "Planning": {
+              "Shared Hit Blocks": 58,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 0.339,
+            "Triggers": [
+            ],
+            "Execution Time": 0.240
+          }
+        ]
+=== RUN   TestAuditBoundedCapacity/50000
+    case_study_audit_test.go:412: users=50000 segment_snapshot=1.151056834s approval=4.85809996s deliveries=90598 go_heap_before=3514800 go_heap_after=3522168 pool_max=32 acquired=0 explain=[
+          {
+            "Plan": {
+              "Node Type": "Seq Scan",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Relation Name": "users",
+              "Alias": "users",
+              "Startup Cost": 0.00,
+              "Total Cost": 1711.00,
+              "Plan Rows": 43365,
+              "Plan Width": 8,
+              "Actual Startup Time": 0.017,
+              "Actual Total Time": 10.409,
+              "Actual Rows": 45669,
+              "Actual Loops": 1,
+              "Filter": "((NOT purchased) AND (city = 'İstanbul'::text) AND (cart_at >= (now() - '30 days'::interval)))",
+              "Rows Removed by Filter": 4331,
+              "Shared Hit Blocks": 711,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning": {
+              "Shared Hit Blocks": 44,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 0.243,
+            "Triggers": [
+            ],
+            "Execution Time": 11.702
+          }
+        ]
+=== NAME  TestAuditBoundedCapacity
+    case_study_audit_test.go:434: bounded_dispatch_elapsed=277.407501ms queue_depth=998 redis_before=# Memory
+        used_memory:1789080
+        used_memory_human:1.71M
+        used_memory_rss:15278080
+        used_memory_rss_human:14.57M
+        used_memory_peak:2639008
+        used_memory_peak_human:2.52M
+        used_memory_peak_perc:67.79%
+        used_memory_overhead:989400
+        used_memory_startup:981160
+        used_memory_dataset:799680
+        used_memory_dataset_perc:98.98%
+        allocator_allocated:5091952
+        allocator_active:16318464
+        allocator_resident:19857408
+        allocator_muzzy:0
+        total_system_memory:4109217792
+        total_system_memory_human:3.83G
+        used_memory_lua:67584
+        used_memory_vm_eval:67584
+        used_memory_lua_human:66.00K
+        used_memory_scripts_eval:6120
+        number_of_cached_scripts:11
+        number_of_functions:0
+        number_of_libraries:0
+        used_memory_vm_functions:33792
+        used_memory_vm_total:101376
+        used_memory_vm_total_human:99.00K
+        used_memory_functions:192
+        used_memory_scripts:6312
+        used_memory_scripts_human:6.16K
+        maxmemory:0
+        maxmemory_human:0B
+        maxmemory_policy:noeviction
+        allocator_frag_ratio:3.54
+        allocator_frag_bytes:7244272
+        allocator_rss_ratio:1.22
+        allocator_rss_bytes:3538944
+        rss_overhead_ratio:0.77
+        rss_overhead_bytes:-4579328
+        mem_fragmentation_ratio:8.64
+        mem_fragmentation_bytes:13509672
+        mem_not_counted_for_evict:0
+        mem_replication_backlog:0
+        mem_total_replication_buffers:0
+        mem_clients_slaves:0
+        mem_clients_normal:1928
+        mem_cluster_links:0
+        mem_aof_buffer:0
+        mem_allocator:jemalloc-5.3.0
+        mem_overhead_db_hashtable_rehashing:0
+        active_defrag_running:0
+        lazyfree_pending_objects:0
+        lazyfreed_objects:11
+         redis_after=# Memory
+        used_memory:2590400
+        used_memory_human:2.47M
+        used_memory_rss:15409152
+        used_memory_rss_human:14.70M
+        used_memory_peak:2639008
+        used_memory_peak_human:2.52M
+        used_memory_peak_perc:98.16%
+        used_memory_overhead:1085968
+        used_memory_startup:981160
+        used_memory_dataset:1504432
+        used_memory_dataset_perc:93.49%
+        allocator_allocated:5773032
+        allocator_active:18350080
+        allocator_resident:20840448
+        allocator_muzzy:0
+        total_system_memory:4109217792
+        total_system_memory_human:3.83G
+        used_memory_lua:99328
+        used_memory_vm_eval:99328
+        used_memory_lua_human:97.00K
+        used_memory_scripts_eval:9944
+        number_of_cached_scripts:13
+        number_of_functions:0
+        number_of_libraries:0
+        used_memory_vm_functions:33792
+        used_memory_vm_total:133120
+        used_memory_vm_total_human:130.00K
+        used_memory_functions:192
+        used_memory_scripts:10136
+        used_memory_scripts_human:9.90K
+        maxmemory:0
+        maxmemory_human:0B
+        maxmemory_policy:noeviction
+        allocator_frag_ratio:3.44
+        allocator_frag_bytes:8594808
+        allocator_rss_ratio:1.14
+        allocator_rss_bytes:2490368
+        rss_overhead_ratio:0.74
+        rss_overhead_bytes:-5431296
+        mem_fragmentation_ratio:6.86
+        mem_fragmentation_bytes:13162904
+        mem_not_counted_for_evict:0
+        mem_replication_backlog:0
+        mem_total_replication_buffers:0
+        mem_clients_slaves:0
+        mem_clients_normal:45824
+        mem_cluster_links:0
+        mem_aof_buffer:0
+        mem_allocator:jemalloc-5.3.0
+        mem_overhead_db_hashtable_rehashing:0
+        active_defrag_running:0
+        lazyfree_pending_objects:0
+        lazyfreed_objects:11
+--- PASS: TestAuditBoundedCapacity (9.03s)
+    --- PASS: TestAuditBoundedCapacity/5000 (0.06s)
+    --- PASS: TestAuditBoundedCapacity/50000 (8.20s)
+=== RUN   TestAuditConsentTransactionRace
+    case_study_audit_test.go:477: revocation blocked while send held FOR SHARE; committed revocation suppresses next queued delivery
+--- PASS: TestAuditConsentTransactionRace (0.64s)
+=== RUN   TestAuditFailuresExhaustedAndRedisUnavailable
+    case_study_audit_test.go:507: failure_count=9 becomes failed without provider call; unavailable Redis limiter fails closed
+--- PASS: TestAuditFailuresExhaustedAndRedisUnavailable (0.37s)
+=== RUN   TestAuditLLMRetryTerminalError
+asynq: pid=4109 2026/10/27 10:42:12.208376 INFO: Starting processing
+    case_study_audit_test.go:568: 3 LLM invocations, failed campaign and persisted generation.failed event; production backoff tested separately (this test accelerates scheduling only)
+asynq: pid=4109 2026/10/27 10:42:22.409428 INFO: Starting graceful shutdown
+asynq: pid=4109 2026/10/27 10:42:23.394611 INFO: Waiting for all workers to finish...
+asynq: pid=4109 2026/10/27 10:42:23.394831 INFO: All workers have finished
+asynq: pid=4109 2026/10/27 10:42:23.398712 INFO: Exiting
+--- PASS: TestAuditLLMRetryTerminalError (11.69s)
+=== RUN   TestAuditDifferentQueueJobsSameDelivery
+asynq: pid=4109 2026/10/27 10:42:24.149555 INFO: Starting processing
+asynq: pid=4109 2026/10/27 10:42:24.150495 INFO: Starting processing
+    case_study_audit_test.go:626: two independent queue task IDs, two Asynq worker instances, one delivery and one provider call; terminal replay safe
+asynq: pid=4109 2026/10/27 10:42:24.259009 INFO: Starting graceful shutdown
+asynq: pid=4109 2026/10/27 10:42:24.972922 INFO: Waiting for all workers to finish...
+asynq: pid=4109 2026/10/27 10:42:24.973280 INFO: All workers have finished
+asynq: pid=4109 2026/10/27 10:42:24.975812 INFO: Exiting
+asynq: pid=4109 2026/10/27 10:42:24.975978 INFO: Starting graceful shutdown
+asynq: pid=4109 2026/10/27 10:42:25.615187 INFO: Waiting for all workers to finish...
+asynq: pid=4109 2026/10/27 10:42:25.615297 INFO: All workers have finished
+asynq: pid=4109 2026/10/27 10:42:25.618437 INFO: Exiting
+--- PASS: TestAuditDifferentQueueJobsSameDelivery (2.18s)
+=== RUN   TestAuditCampaignExpiry
+    case_study_audit_test.go:647: 25-hour-old unsent campaign becomes campaign_expired without provider send
+--- PASS: TestAuditCampaignExpiry (0.43s)
+=== RUN   TestDefaultLifetimeDoesNotExpireLargeBacklog
+--- PASS: TestDefaultLifetimeDoesNotExpireLargeBacklog (0.51s)
+=== RUN   TestUnsafeProviderInterruptedAttemptNeedsReview
+--- PASS: TestUnsafeProviderInterruptedAttemptNeedsReview (0.36s)
+=== RUN   TestCharacterBudgetExcludesOnlyWhitelistedVariables
+--- PASS: TestCharacterBudgetExcludesOnlyWhitelistedVariables (0.00s)
+=== RUN   TestPersonalizationDoesNotConsumeLiteralBudget
+--- PASS: TestPersonalizationDoesNotConsumeLiteralBudget (0.00s)
+=== RUN   TestTemplateAndRecipientValidation
+--- PASS: TestTemplateAndRecipientValidation (0.00s)
+=== RUN   TestStructuredLLMValidation
+--- PASS: TestStructuredLLMValidation (0.00s)
+=== RUN   TestMockLLMStreaming
+--- PASS: TestMockLLMStreaming (1.23s)
+=== RUN   TestPartialJSONStreaming
+--- PASS: TestPartialJSONStreaming (0.01s)
+=== RUN   TestRetryClassification
+--- PASS: TestRetryClassification (0.00s)
+=== RUN   TestBriefSegmentExplicitConstraints
+--- PASS: TestBriefSegmentExplicitConstraints (0.03s)
+=== RUN   TestIntegrationPipeline
+asynq: pid=4109 2026/10/27 10:42:28.738238 INFO: Starting processing
+asynq: pid=4109 2026/10/27 10:42:28.738431 INFO: Starting processing
+asynq: pid=4109 2026/10/27 10:42:28.738493 INFO: Starting processing
+2026/10/27 10:42:31 ERROR request failed error="Kampanya sürümü değişti veya artık düzenlenemez; sayfayı yenileyin"
+2026/10/27 10:42:31 ERROR request failed error="Kampanya sürümü değişti veya artık düzenlenemez; sayfayı yenileyin"
+=== RUN   TestIntegrationPipeline/concurrent_duplicate_and_success_timestamp
+=== RUN   TestIntegrationPipeline/persisted_retry_deadline_and_no_failure_timestamp
+=== RUN   TestIntegrationPipeline/throttle_does_not_consume_failure_budget
+=== RUN   TestIntegrationPipeline/accepted_then_worker_cancel_receipt_recovery
+=== RUN   TestIntegrationPipeline/revoked_consent_and_permanent_failure
+=== RUN   TestIntegrationPipeline/same_user_parallel_sms_email_preserves_both_dates
+=== RUN   TestIntegrationPipeline/parallel_approval_does_not_duplicate_deliveries
+=== NAME  TestIntegrationPipeline
+    integration_test.go:243: pipeline: 95 accepted, 0 failed; duplicate approval and task replay safe
+asynq: pid=4109 2026/10/27 10:42:59.621699 INFO: Starting graceful shutdown
+asynq: pid=4109 2026/10/27 10:43:00.506387 INFO: Waiting for all workers to finish...
+asynq: pid=4109 2026/10/27 10:43:00.506469 INFO: All workers have finished
+asynq: pid=4109 2026/10/27 10:43:00.508094 INFO: Exiting
+asynq: pid=4109 2026/10/27 10:43:00.508186 INFO: Starting graceful shutdown
+asynq: pid=4109 2026/10/27 10:43:01.508755 INFO: Waiting for all workers to finish...
+asynq: pid=4109 2026/10/27 10:43:01.509254 INFO: All workers have finished
+asynq: pid=4109 2026/10/27 10:43:01.513721 INFO: Exiting
+asynq: pid=4109 2026/10/27 10:43:01.513851 INFO: Starting graceful shutdown
+asynq: pid=4109 2026/10/27 10:43:01.817093 INFO: Waiting for all workers to finish...
+asynq: pid=4109 2026/10/27 10:43:01.817288 INFO: All workers have finished
+asynq: pid=4109 2026/10/27 10:43:01.819455 INFO: Exiting
+=== RUN   TestIntegrationPipeline/dashboard_SSE_reconnect_sends_current_complete_state
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send/malformed_json
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send/unsupported_segment
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send/overlong_content
+=== RUN   TestIntegrationPipeline/outbox_recovers_redis_failure_and_crash_after_enqueue
+=== RUN   TestIntegrationPipeline/sse_reconnect_replays_only_missed_events_and_fresh_snapshot
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/429
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/503
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/timeout
+=== RUN   TestIntegrationPipeline/sql_injection_http_ids_filters_and_types
+=== RUN   TestIntegrationPipeline/sql_like_brief_and_copy_remain_literal_data
+=== RUN   TestIntegrationPipeline/cross_origin_write_cannot_create_campaign
+=== RUN   TestIntegrationPipeline/real_redis_queue_counts_ready_scheduled_and_retry
+asynq: pid=4109 2026/10/27 10:43:02.421945 INFO: Starting processing
+asynq: pid=4109 2026/10/27 10:43:02.476348 INFO: Starting graceful shutdown
+asynq: pid=4109 2026/10/27 10:43:03.732100 INFO: Waiting for all workers to finish...
+asynq: pid=4109 2026/10/27 10:43:03.732383 INFO: All workers have finished
+asynq: pid=4109 2026/10/27 10:43:03.734160 INFO: Exiting
+--- PASS: TestIntegrationPipeline (35.57s)
+    --- PASS: TestIntegrationPipeline/concurrent_duplicate_and_success_timestamp (0.02s)
+    --- PASS: TestIntegrationPipeline/persisted_retry_deadline_and_no_failure_timestamp (0.00s)
+    --- PASS: TestIntegrationPipeline/throttle_does_not_consume_failure_budget (0.00s)
+    --- PASS: TestIntegrationPipeline/accepted_then_worker_cancel_receipt_recovery (0.01s)
+    --- PASS: TestIntegrationPipeline/revoked_consent_and_permanent_failure (0.01s)
+    --- PASS: TestIntegrationPipeline/same_user_parallel_sms_email_preserves_both_dates (0.02s)
+    --- PASS: TestIntegrationPipeline/parallel_approval_does_not_duplicate_deliveries (0.02s)
+    --- PASS: TestIntegrationPipeline/dashboard_SSE_reconnect_sends_current_complete_state (0.05s)
+    --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send (0.01s)
+        --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send/malformed_json (0.01s)
+        --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send/unsupported_segment (0.00s)
+        --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send/overlong_content (0.00s)
+    --- PASS: TestIntegrationPipeline/outbox_recovers_redis_failure_and_crash_after_enqueue (0.09s)
+    --- PASS: TestIntegrationPipeline/sse_reconnect_replays_only_missed_events_and_fresh_snapshot (0.01s)
+    --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover (0.38s)
+        --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/429 (0.05s)
+        --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/503 (0.06s)
+        --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/timeout (0.28s)
+    --- PASS: TestIntegrationPipeline/sql_injection_http_ids_filters_and_types (0.04s)
+    --- PASS: TestIntegrationPipeline/sql_like_brief_and_copy_remain_literal_data (0.01s)
+    --- PASS: TestIntegrationPipeline/cross_origin_write_cannot_create_campaign (0.00s)
+    --- PASS: TestIntegrationPipeline/real_redis_queue_counts_ready_scheduled_and_retry (1.32s)
+=== RUN   TestQueueTotalIncludesDelayedAndRetryJobs
+--- PASS: TestQueueTotalIncludesDelayedAndRetryJobs (0.00s)
+=== RUN   TestQueueUnavailableIsNotAnEmptyQueue
+--- PASS: TestQueueUnavailableIsNotAnEmptyQueue (0.00s)
+=== RUN   TestOriginAndSecurityHeaders
+=== RUN   TestOriginAndSecurityHeaders/same_origin
+=== RUN   TestOriginAndSecurityHeaders/cross_origin
+=== RUN   TestOriginAndSecurityHeaders/opaque_origin
+=== RUN   TestOriginAndSecurityHeaders/userinfo
+=== RUN   TestOriginAndSecurityHeaders/cli_no_origin
+--- PASS: TestOriginAndSecurityHeaders (0.00s)
+    --- PASS: TestOriginAndSecurityHeaders/same_origin (0.00s)
+    --- PASS: TestOriginAndSecurityHeaders/cross_origin (0.00s)
+    --- PASS: TestOriginAndSecurityHeaders/opaque_origin (0.00s)
+    --- PASS: TestOriginAndSecurityHeaders/userinfo (0.00s)
+    --- PASS: TestOriginAndSecurityHeaders/cli_no_origin (0.00s)
+PASS
+ok  	campaignstudio/internal/studio	82.830s

@@ -118,3 +118,22 @@ func TestRetryClassification(t *testing.T) {
 		}
 	}
 }
+
+func TestBriefSegmentExplicitConstraints(t *testing.T) {
+	for _, tc := range []struct {
+		brief   string
+		segment Segment
+		bad     bool
+	}{
+		{"İstanbul son 30 gün", Segment{"Ankara", 30, true}, true},
+		{"ISTANBUL son 30 gün", Segment{"İstanbul", 30, true}, false},
+		{"istanbul son 7 gün", Segment{"İstanbul", 30, true}, true},
+		{"İstanbul ve Ankara", Segment{"Ankara", 30, true}, true},
+		{"Ankara'daki kullanıcılar son 7 gün", Segment{"Ankara", 7, true}, false},
+		{"genel kampanya", Segment{"İstanbul", 30, true}, false},
+	} {
+		if err := ValidateBriefSegment(tc.brief, tc.segment); (err != nil) != tc.bad {
+			t.Fatalf("%s: %v", tc.brief, err)
+		}
+	}
+}

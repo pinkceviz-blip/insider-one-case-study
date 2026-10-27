@@ -28,6 +28,48 @@ func (l responseLLM) Generate(ctx context.Context, brief string, emit func(strin
 // Run after background dispatch/consumers stop: every fault boundary is explicit,
 // and the only Redis database touched is this suite's isolated DB 15.
 func exerciseAcceptance(t *testing.T, ctx context.Context, e *Engine, campaignID string, opt asynq.RedisClientOpt, apiURL string) {
+	t.Run("dashboard SSE reconnect sends current complete state", func(t *testing.T) {
+		read := func() map[string]any {
+			t.Helper()
+			streamCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			defer cancel()
+			req, _ := http.NewRequestWithContext(streamCtx, "GET", apiURL+"/api/dashboard/events", nil)
+			req.Header.Set("Last-Event-ID", "999999999")
+			res, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer res.Body.Close()
+			if res.Header.Get("Content-Type") != "text/event-stream" {
+				t.Fatal("not SSE")
+			}
+			scan := bufio.NewScanner(res.Body)
+			scan.Buffer(make([]byte, 4096), 4*1024*1024)
+			for scan.Scan() {
+				if strings.HasPrefix(scan.Text(), "data: ") {
+					var v map[string]any
+					if err = json.Unmarshal([]byte(strings.TrimPrefix(scan.Text(), "data: ")), &v); err != nil {
+						t.Fatal(err)
+					}
+					return v
+				}
+			}
+			t.Fatalf("missing dashboard snapshot: %v", scan.Err())
+			return nil
+		}
+		before := read()
+		if before["queues"] == nil || before["channel_stats"] == nil || before["campaigns"] == nil {
+			t.Fatal("incomplete snapshot")
+		}
+		if _, err := e.Store.DB.Exec(ctx, "INSERT INTO campaigns(id,brief,status) VALUES($1,$2,'generating')", strings.Repeat("d", 32), "SSE reconnect test"); err != nil {
+			t.Fatal(err)
+		}
+		after := read()
+		if after["stats"].(map[string]any)["campaigns"].(float64) != before["stats"].(map[string]any)["campaigns"].(float64)+1 {
+			t.Fatal("reconnect did not restore current state")
+		}
+	})
+
 	t.Run("invalid_llm_never_reaches_send", func(t *testing.T) {
 		valid := Proposal{Segment: Segment{"İstanbul", 4, true}, Content: Content{"hello", "subject", "body"}}
 		unsupported := valid

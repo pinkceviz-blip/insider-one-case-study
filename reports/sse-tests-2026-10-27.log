@@ -1,0 +1,163 @@
+ Container insider-one-case-study-postgres-1 Running
+ Container insider-one-case-study-redis-1 Running
+ Image insider-one-case-study-integration Building
+#1 [internal] load local bake definitions
+#1 reading from stdin 675B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile.test
+#2 transferring dockerfile: 223B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/golang:1.24-alpine
+#3 DONE 0.1s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [1/6] FROM docker.io/library/golang:1.24-alpine@sha256:8bee1901f1e530bfb4a7850aa7a479d17ae3a18beb6e09064ed54cfd245b7191
+#5 resolve docker.io/library/golang:1.24-alpine@sha256:8bee1901f1e530bfb4a7850aa7a479d17ae3a18beb6e09064ed54cfd245b7191 0.0s done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 28.33kB 0.1s done
+#6 DONE 0.1s
+
+#7 [2/6] RUN apk add --no-cache gcc musl-dev
+#7 CACHED
+
+#8 [3/6] WORKDIR /src
+#8 CACHED
+
+#9 [4/6] COPY go.mod go.sum ./
+#9 CACHED
+
+#10 [5/6] RUN go mod download
+#10 CACHED
+
+#11 [6/6] COPY . .
+#11 DONE 0.0s
+
+#12 exporting to image
+#12 exporting layers 0.1s done
+#12 exporting manifest sha256:3ea2ad444f56582a83b2192354cb5135614c050cf639928aa0fa849d857e689d done
+#12 exporting config sha256:dfcbaf818da9840f5876b49e6643cde0757422d23656a8004cc676aa4ab0a984 done
+#12 exporting attestation manifest sha256:3634c2c87212a0dfb829f75ded5548f2130d30790a32ca65eca36c3d92f8779b 0.0s done
+#12 exporting manifest list sha256:2818ea84e477c7273d18c65b09de28eff5057d11ff1abc95bff2bb461ba84b6e done
+#12 naming to docker.io/library/insider-one-case-study-integration:latest done
+#12 unpacking to docker.io/library/insider-one-case-study-integration:latest 0.0s done
+#12 DONE 0.2s
+
+#13 resolving provenance for metadata file
+#13 DONE 0.0s
+ Image insider-one-case-study-integration Built
+ Container insider-one-case-study-postgres-1 Waiting
+ Container insider-one-case-study-redis-1 Waiting
+ Container insider-one-case-study-redis-1 Healthy
+ Container insider-one-case-study-postgres-1 Healthy
+ Container insider-one-case-study-integration-run-1e8dbe5e075d Creating
+ Container insider-one-case-study-integration-run-1e8dbe5e075d Created
+?   	campaignstudio/cmd/studio	[no test files]
+=== RUN   TestCharacterBudgetExcludesOnlyWhitelistedVariables
+--- PASS: TestCharacterBudgetExcludesOnlyWhitelistedVariables (0.00s)
+=== RUN   TestPersonalizationDoesNotConsumeLiteralBudget
+--- PASS: TestPersonalizationDoesNotConsumeLiteralBudget (0.00s)
+=== RUN   TestTemplateAndRecipientValidation
+--- PASS: TestTemplateAndRecipientValidation (0.00s)
+=== RUN   TestStructuredLLMValidation
+--- PASS: TestStructuredLLMValidation (0.00s)
+=== RUN   TestMockLLMStreaming
+--- PASS: TestMockLLMStreaming (1.24s)
+=== RUN   TestPartialJSONStreaming
+--- PASS: TestPartialJSONStreaming (0.00s)
+=== RUN   TestRetryClassification
+--- PASS: TestRetryClassification (0.00s)
+=== RUN   TestIntegrationPipeline
+asynq: pid=4074 2026/10/27 09:59:09.726039 INFO: Starting processing
+asynq: pid=4074 2026/10/27 09:59:09.727056 INFO: Starting processing
+asynq: pid=4074 2026/10/27 09:59:09.728176 INFO: Starting processing
+2026/10/27 09:59:12 ERROR request failed error="Kampanya sürümü değişti veya artık düzenlenemez; sayfayı yenileyin"
+2026/10/27 09:59:12 ERROR request failed error="Kampanya sürümü değişti veya artık düzenlenemez; sayfayı yenileyin"
+=== RUN   TestIntegrationPipeline/concurrent_duplicate_and_success_timestamp
+=== RUN   TestIntegrationPipeline/persisted_retry_deadline_and_no_failure_timestamp
+=== RUN   TestIntegrationPipeline/throttle_does_not_consume_failure_budget
+=== RUN   TestIntegrationPipeline/accepted_then_worker_cancel_receipt_recovery
+=== RUN   TestIntegrationPipeline/revoked_consent_and_permanent_failure
+=== RUN   TestIntegrationPipeline/same_user_parallel_sms_email_preserves_both_dates
+=== RUN   TestIntegrationPipeline/parallel_approval_does_not_duplicate_deliveries
+=== NAME  TestIntegrationPipeline
+    integration_test.go:243: pipeline: 92 accepted, 3 failed; duplicate approval and task replay safe
+asynq: pid=4074 2026/10/27 09:59:56.322980 INFO: Starting graceful shutdown
+asynq: pid=4074 2026/10/27 09:59:57.603526 INFO: Waiting for all workers to finish...
+asynq: pid=4074 2026/10/27 09:59:57.603717 INFO: All workers have finished
+asynq: pid=4074 2026/10/27 09:59:57.605928 INFO: Exiting
+asynq: pid=4074 2026/10/27 09:59:57.606017 INFO: Starting graceful shutdown
+asynq: pid=4074 2026/10/27 09:59:57.750022 INFO: Waiting for all workers to finish...
+asynq: pid=4074 2026/10/27 09:59:57.750107 INFO: All workers have finished
+asynq: pid=4074 2026/10/27 09:59:57.752563 INFO: Exiting
+asynq: pid=4074 2026/10/27 09:59:57.752627 INFO: Starting graceful shutdown
+asynq: pid=4074 2026/10/27 09:59:57.852056 INFO: Waiting for all workers to finish...
+asynq: pid=4074 2026/10/27 09:59:57.852164 INFO: All workers have finished
+asynq: pid=4074 2026/10/27 09:59:57.853391 INFO: Exiting
+=== RUN   TestIntegrationPipeline/dashboard_SSE_reconnect_sends_current_complete_state
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send/malformed_json
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send/unsupported_segment
+=== RUN   TestIntegrationPipeline/invalid_llm_never_reaches_send/overlong_content
+=== RUN   TestIntegrationPipeline/outbox_recovers_redis_failure_and_crash_after_enqueue
+=== RUN   TestIntegrationPipeline/sse_reconnect_replays_only_missed_events_and_fresh_snapshot
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/429
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/503
+=== RUN   TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/timeout
+=== RUN   TestIntegrationPipeline/sql_injection_http_ids_filters_and_types
+=== RUN   TestIntegrationPipeline/sql_like_brief_and_copy_remain_literal_data
+=== RUN   TestIntegrationPipeline/cross_origin_write_cannot_create_campaign
+=== RUN   TestIntegrationPipeline/real_redis_queue_counts_ready_scheduled_and_retry
+asynq: pid=4074 2026/10/27 09:59:58.524483 INFO: Starting processing
+asynq: pid=4074 2026/10/27 09:59:58.578281 INFO: Starting graceful shutdown
+asynq: pid=4074 2026/10/27 09:59:59.252007 INFO: Waiting for all workers to finish...
+asynq: pid=4074 2026/10/27 09:59:59.252088 INFO: All workers have finished
+asynq: pid=4074 2026/10/27 09:59:59.254208 INFO: Exiting
+--- PASS: TestIntegrationPipeline (51.52s)
+    --- PASS: TestIntegrationPipeline/concurrent_duplicate_and_success_timestamp (0.01s)
+    --- PASS: TestIntegrationPipeline/persisted_retry_deadline_and_no_failure_timestamp (0.01s)
+    --- PASS: TestIntegrationPipeline/throttle_does_not_consume_failure_budget (0.00s)
+    --- PASS: TestIntegrationPipeline/accepted_then_worker_cancel_receipt_recovery (0.01s)
+    --- PASS: TestIntegrationPipeline/revoked_consent_and_permanent_failure (0.01s)
+    --- PASS: TestIntegrationPipeline/same_user_parallel_sms_email_preserves_both_dates (0.02s)
+    --- PASS: TestIntegrationPipeline/parallel_approval_does_not_duplicate_deliveries (0.03s)
+    --- PASS: TestIntegrationPipeline/dashboard_SSE_reconnect_sends_current_complete_state (0.05s)
+    --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send (0.06s)
+        --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send/malformed_json (0.04s)
+        --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send/unsupported_segment (0.01s)
+        --- PASS: TestIntegrationPipeline/invalid_llm_never_reaches_send/overlong_content (0.01s)
+    --- PASS: TestIntegrationPipeline/outbox_recovers_redis_failure_and_crash_after_enqueue (0.13s)
+    --- PASS: TestIntegrationPipeline/sse_reconnect_replays_only_missed_events_and_fresh_snapshot (0.01s)
+    --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover (0.38s)
+        --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/429 (0.04s)
+        --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/503 (0.06s)
+        --- PASS: TestIntegrationPipeline/deterministic_429_503_and_timeout_recover/timeout (0.28s)
+    --- PASS: TestIntegrationPipeline/sql_injection_http_ids_filters_and_types (0.03s)
+    --- PASS: TestIntegrationPipeline/sql_like_brief_and_copy_remain_literal_data (0.01s)
+    --- PASS: TestIntegrationPipeline/cross_origin_write_cannot_create_campaign (0.00s)
+    --- PASS: TestIntegrationPipeline/real_redis_queue_counts_ready_scheduled_and_retry (0.74s)
+=== RUN   TestQueueTotalIncludesDelayedAndRetryJobs
+--- PASS: TestQueueTotalIncludesDelayedAndRetryJobs (0.00s)
+=== RUN   TestQueueUnavailableIsNotAnEmptyQueue
+--- PASS: TestQueueUnavailableIsNotAnEmptyQueue (0.00s)
+=== RUN   TestOriginAndSecurityHeaders
+=== RUN   TestOriginAndSecurityHeaders/same_origin
+=== RUN   TestOriginAndSecurityHeaders/cross_origin
+=== RUN   TestOriginAndSecurityHeaders/opaque_origin
+=== RUN   TestOriginAndSecurityHeaders/userinfo
+=== RUN   TestOriginAndSecurityHeaders/cli_no_origin
+--- PASS: TestOriginAndSecurityHeaders (0.00s)
+    --- PASS: TestOriginAndSecurityHeaders/same_origin (0.00s)
+    --- PASS: TestOriginAndSecurityHeaders/cross_origin (0.00s)
+    --- PASS: TestOriginAndSecurityHeaders/opaque_origin (0.00s)
+    --- PASS: TestOriginAndSecurityHeaders/userinfo (0.00s)
+    --- PASS: TestOriginAndSecurityHeaders/cli_no_origin (0.00s)
+PASS
+ok  	campaignstudio/internal/studio	53.874s

@@ -1,0 +1,110 @@
+Mevcut Insider One projesinin uçtan uca akışını, hata toleransını, veri tutarlılığını ve yüksek yük altındaki davranışlarını test etmeni istiyorum.
+Amacım mevcut implementasyonun gerçek dünya senaryolarında nasıl davrandığını görmek, potansiyel race condition'ları, duplicate processing problemlerini ve mimari darboğazları tespit etmek.
+Öncelikle repository'yi incele. Kullanılan teknolojileri, endpoint'leri, queue/worker yapılarını, database modellerini ve external provider entegrasyonlarını belirle.
+Önemli kurallar:
+- Önce mevcut davranışı test et, doğrudan kodu değiştirme.
+- Her senaryo için mümkünse gerçek otomatik test yaz ve çalıştır.
+- External servisler için kontrollü mock/fake kullan.
+- Sadece kod incelemesine dayanarak bir testin başarılı olduğunu söyleme.
+- Eksik mekanizmaları mevcutmuş gibi varsayma.
+- Test edilemeyen durumları ve nedenlerini açıkça belirt.
+- Her testte beklenen davranışı, gerçekleşen davranışı ve sonucu raporla.
+- Mevcut mimariyi değiştirmeden önce önerilerini sun.
+AI segmentasyon servisinin geçersiz veya beklenmeyen çıktılar üretmesi durumunda sistemin davranışını doğrula.
+Senaryolar:
+- Geçersiz JSON dönmesi.
+- Whitelist dışında bir alan üretmesi.
+- Yanlış veri tipi üretmesi.
+- Eksik veya null alan döndürmesi.
+- İzin verilmeyen bir filtre ya da operatör üretmesi.
+Kontrol et:
+- Backend bu çıktıları reddediyor mu?
+- Hatalı segmentasyon kuralı database sorgusuna dönüşebiliyor mu?
+- Retry veya yeniden üretim mekanizması var mı?
+- Hata frontend'e kontrollü şekilde iletiliyor mu?
+AI'ın yapısal olarak geçerli fakat kullanıcının isteğiyle uyuşmayan bir segmentasyon kuralı üretmesi durumunu test et.
+Örnek:
+Kullanıcı İstanbul'daki kullanıcıları hedeflerken AI Ankara filtresi üretiyor.
+Kontrol et:
+- Bu tutarsızlığı yakalayan bir mekanizma var mı?
+- Kullanıcıya üretilen kurallar açıkça gösteriliyor mu?
+- Onay verilmeden kampanya dispatch edilebiliyor mu?
+- Onaylanan kural ile gönderimde kullanılan kural aynı mı?
+- Onaydan sonra kural değiştirilebiliyor mu?
+SMS/email provider isteği başarıyla kabul ettiği halde response dönmeden timeout oluşmasını simüle et.
+Ardından retry mekanizmasını tetikle.
+Kontrol et:
+- Aynı kullanıcıya aynı kampanya mesajı iki kez gönderilebiliyor mu?
+- Idempotency key kullanılıyor mu?
+- Key nerede üretiliyor ve nerede kontrol ediliyor?
+- Provider idempotency desteklemiyorsa ne oluyor?
+- Belirsiz delivery sonuçları nasıl yönetiliyor?
+- Retry/backoff davranışı doğru mu?
+Bir worker'ın job processing sırasında beklenmedik şekilde durmasını simüle et.
+Farklı aşamalarda crash testi yap:
+- Job alındıktan hemen sonra.
+- Provider çağrısından önce.
+- Provider mesajı kabul ettikten sonra.
+- Database delivery status güncellenmeden önce.
+- Database güncellendikten fakat job tamamlanmadan önce.
+Kontrol et:
+- Job kayboluyor mu?
+- BullMQ stalled-job recovery nasıl davranıyor?
+- Aynı job tekrar işleniyor mu?
+- Duplicate delivery oluşuyor mu?
+- Retry sınırı dolduğunda ne oluyor?
+- Failed job'lar nasıl izleniyor ve yeniden işleniyor?
+Aynı queue üzerinde birden fazla worker instance çalıştır.
+Aynı zamanda aynı campaign/user/channel kombinasyonu için duplicate job üretmeyi dene.
+Kontrol et:
+- Job claiming atomik mi?
+- İki worker aynı delivery üzerinde eşzamanlı işlem yapabiliyor mu?
+- Redis lock kaybında ne oluyor?
+- Database unique constraint var mı?
+- Delivery status güncellemeleri race condition oluşturuyor mu?
+- Idempotency ve locking mekanizmaları hangi katmanlarda uygulanıyor?
+Ayrıca duplicate job ile aynı job'ın tekrar işlenmesi senaryolarını ayrı ayrı test et.
+Birden fazla SMS/email worker instance çalıştırarak provider rate limit davranışını doğrula.
+Test koşulu:
+- Provider kapasitesi: 100 request/second.
+- Birden fazla worker instance.
+- Yeterli sayıda bekleyen job.
+- Farklı concurrency değerleri.
+Kontrol et:
+- Rate limit worker başına mı, queue genelinde mi?
+- Worker sayısı arttığında toplam request rate artıyor mu?
+- Provider limiti aşılabiliyor mu?
+- SMS ve email farklı queue'larda ise limitler nasıl uygulanıyor?
+- Provider 429 dönerse sistem nasıl davranıyor?
+- Retry mekanizması ani trafik patlaması oluşturuyor mu?
+Rate limit ve concurrency limit değerlerini ayrı ayrı değiştirerek sonuçları karşılaştır.
+Kampanya onaylandıktan ve delivery job'ları oluşturulduktan sonra bir kullanıcının SMS/email iznini geri çekmesini simüle et.
+Kontrol et:
+- Worker güncel consent bilgisini kontrol ediyor mu?
+- İzni kaldırılmış kullanıcıya mesaj gönderilebiliyor mu?
+- Kuyrukta bekleyen job'lar nasıl ele alınıyor?
+- Consent kontrolü ile provider çağrısı arasında race condition var mı?
+- İptal edilen gönderimler doğru şekilde kaydediliyor mu?
+Sistemin büyük kullanıcı segmentleri altında nasıl davrandığını incele.
+Önce küçük ve kontrollü yük testleri gerçekleştir. Ardından 1 milyon ve 10 milyon kullanıcı ölçeği için kapasite analizi yap. Gerçekten bu hacimde işlem başlatmadan önce kaynak tüketimini ve test ortamı güvenliğini değerlendir.
+Kontrol et:
+- Segmentasyon sorgularının performansı.
+- Database connection pool sınırları.
+- Backend memory kullanımı.
+- Job üretim hızı.
+- Redis memory ve queue depth.
+- Worker throughput.
+- Provider rate limit.
+- Backpressure mekanizmaları.
+- Queue büyümesinin sistem üzerindeki etkisi.
+Ayrıca darboğazın API, database, Redis, worker veya provider katmanlarından hangisinde oluştuğunu belirlemeye çalış.
+Mevcut implementasyonu inceleyerek aşağıdaki noktaları değerlendir:
+- API handler'larının sorumlulukları doğru ayrılmış mı?
+- Uzun süren işler HTTP request lifecycle dışında mı yürütülüyor?
+- Worker ve queue yaşam döngüsü doğru yönetiliyor mu?
+- Retry, timeout, concurrency ve rate limit ayarları doğru katmanlarda mı?
+- Database ve Redis bağlantıları doğru yönetiliyor mu?
+- Idempotency ve deduplication mekanizmaları yeterli mi?
+- Hata yönetimi ve observability eksikleri var mı?
+- Kodda gereksiz karmaşıklık veya potansiyel güvenilirlik sorunları var mı?
+Her bulgu için ilgili dosyayı, kod bölümünü ve teknik gerekçeyi belirt.

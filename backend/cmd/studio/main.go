@@ -61,7 +61,12 @@ func main() {
 		slog.Error("LLM_MODE must be mock or claude")
 		os.Exit(1)
 	}
-	engine := &studio.Engine{Store: store, Redis: rd, Queue: queue, Registry: registry, LLM: llm}
+	ttl, err := time.ParseDuration(env("CAMPAIGN_TTL", "0s"))
+	if err != nil || ttl < 0 {
+		slog.Error("CAMPAIGN_TTL must be a nonnegative Go duration")
+		os.Exit(1)
+	}
+	engine := &studio.Engine{Store: store, Redis: rd, Queue: queue, Registry: registry, LLM: llm, CampaignTTL: ttl}
 	if role == "dispatcher" {
 		engine.RunDispatcher(ctx)
 		return

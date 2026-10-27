@@ -3,6 +3,9 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { isCampaignId, campaignPath, deliveryHistoryPath, literalCount, templateError } from './security.js'
 const channelViews=[{id:'sms',label:'SMS',icon:'▤'},{id:'email',label:'Email',icon:'✉'}]
 const channelStats=ref({sms:{},email:{}}), channelStatsError=ref('')
+const queueStats=ref({sms:{},email:{}}), queueStatsError=ref(''), queueSampledAt=ref(null)
+const queueNumber=(ch,key)=>queueStats.value[ch]?.available?fmt(queueStats.value[ch][key]):'—'
+const dashboardState=ref('connecting')
 const page=ref('studio'), step=ref(1), brief=ref("Son 30 günde sepetine ürün ekleyip alışveriş yapmayan İstanbul'daki kullanıcılara %30 indirim hatırlatması gönder. Samimi ama kısa olsun.")
 const campaign=ref(null), content=ref({sms:'',email_subject:'',email_body:''}), busy=ref(false), error=ref(''), consent=ref(false), streamState=ref('connecting')
 const config=ref({llm_mode:'mock',limits:{brief:4000,sms:160,email_subject:80,email_body:10000}}), campaigns=ref([]), stats=ref({}), health=ref(null), healthError=ref(''), lastRefresh=ref(null)
@@ -22,7 +25,7 @@ async function inspectDelivery(id){
 }
 function closeDetail(){detailEpoch++;deliveryDetail.value=null}
 watch([auditChannel,auditKind,auditScope],()=>refreshErrors())
-let source, timer, refreshRunning=false
+let source, dashboardSource
 const count=s=>Array.from(s||'').length
 const budget=literalCount
 const preview=s=>(s||'').replace(/\{\{\s*first_name\s*\}\}/g,'Deniz')
@@ -30,11 +33,11 @@ const fmt=n=>new Intl.NumberFormat('tr-TR').format(n||0)
 const generating=computed(()=>campaign.value?.status==='generating')
 const editable=computed(()=>campaign.value?.status==='draft')
 const invalid=computed(()=>!content.value.sms.trim()||!content.value.email_subject.trim()||!content.value.email_body.trim()||budget(content.value.sms)>160||budget(content.value.email_subject)>80||budget(content.value.email_body)>10000||/\r|\n/.test(content.value.email_subject)||Object.values(content.value).some(v=>templateError(v)))
-const statusNames={generating:'Hazırlanıyor',draft:'Taslak',approved:'Onaylandı',dispatching:'Gönderiliyor',completed:'Tamamlandı',failed:'Üretim hatası'}
-const deliveryLabels={accepted:'Provider kabul etti',failed:'Kalıcı hata',pending:'Kuyrukta',processing:'İşleniyor',retrying:'Yeniden denenecek',suppressed:'İzin nedeniyle iptal'}
+const statusNames={generating:'Hazırlanıyor',draft:'Taslak',approved:'Onaylandı',dispatching:'Gönderiliyor',completed:'Tamamlandı',failed:'Üretim hatası',needs_review:'İnceleme gerekiyor'}
+const deliveryLabels={accepted:'Provider kabul etti',failed:'Kalıcı hata',pending:'Kuyrukta',processing:'İşleniyor',retrying:'Yeniden denenecek',suppressed:'İzin nedeniyle iptal',unknown:'Sonucu belirsiz · manuel inceleme'}
 const counts=computed(()=>campaign.value?.counts||{})
 const total=computed(()=>Object.values(counts.value).reduce((a,b)=>a+b,0))
-const terminal=computed(()=>(counts.value.accepted||0)+(counts.value.failed||0)+(counts.value.suppressed||0))
+const terminal=computed(()=>(counts.value.accepted||0)+(counts.value.failed||0)+(counts.value.suppressed||0)+(counts.value.unknown||0))
 const progress=computed(()=>total.value?Math.round(terminal.value/total.value*100):0)
 async function api(path, options={}){
  const r=await fetch(path,{...options,headers:{'Content-Type':'application/json',...options.headers}})
@@ -46,7 +49,7 @@ function connect(id){
  source.onopen=()=>streamState.value='live';source.onerror=()=>streamState.value='reconnecting'
  source.addEventListener('generation.started',()=>{if(campaign.value?.id!==id)return;content.value={sms:'',email_subject:'',email_body:''}})
  source.addEventListener('content.delta',event=>{if(campaign.value?.id!==id||campaign.value?.status!=='generating')return;const d=JSON.parse(event.data);if(Object.hasOwn(content.value,d.field))content.value[d.field]+=d.delta})
- source.addEventListener('snapshot',event=>{const c=JSON.parse(event.data);if(c.id!==campaign.value?.id||c.version<campaign.value.version)return;const rank={generating:0,draft:1,approved:2,dispatching:3,completed:4,failed:4};if(c.version===campaign.value.version&&rank[c.status]<rank[campaign.value.status])return;const wasGenerating=generating.value;campaign.value=c;if(wasGenerating&&c.status==='draft'){content.value={...c.proposal.content};step.value=2}if(c.status==='failed')error.value=c.error})
+ source.addEventListener('snapshot',event=>{const c=JSON.parse(event.data);if(c.id!==campaign.value?.id||c.version<campaign.value.version)return;const rank={generating:0,draft:1,approved:2,dispatching:3,completed:4,failed:4,needs_review:4};if(c.version===campaign.value.version&&rank[c.status]<rank[campaign.value.status])return;const wasGenerating=generating.value;campaign.value=c;if(wasGenerating&&c.status==='draft'){content.value={...c.proposal.content};step.value=2}if(c.status==='failed')error.value=c.error})
 }
 async function generate(){
  if(busy.value)return;busy.value=true;error.value='';consent.value=false
@@ -63,20 +66,25 @@ async function load(id){
  busy.value=true;error.value='';try{const c=await api(campaignPath(id));campaign.value=c;brief.value=c.brief;content.value={...c.proposal.content};localStorage.setItem('studio.campaign',id);step.value=c.status==='generating'||c.status==='draft'?2:3;page.value=c.status==='draft'||c.status==='generating'?'studio':'monitor';connect(id)}catch(e){error.value=e.message}finally{busy.value=false}
 }
 function reset(){source?.close();campaign.value=null;step.value=1;page.value='studio';content.value={sms:'',email_subject:'',email_body:''};error.value='';consent.value=false;localStorage.removeItem('studio.campaign')}
-async function refresh(){
- if(refreshRunning)return;refreshRunning=true
- const results=await Promise.allSettled([api('/api/stats'),api('/api/campaigns'),api('/health/ready'),api('/api/stats?channel=sms'),api('/api/stats?channel=email')]);
- if(results[0].status==='fulfilled')stats.value=results[0].value
- if(results[1].status==='fulfilled')campaigns.value=results[1].value
- channelStatsError.value=''
- for(const [i,ch] of ['sms','email'].entries()){if(results[i+3].status==='fulfilled')channelStats.value[ch]=results[i+3].value;else channelStatsError.value='Kanal sayaçları yenilenemedi; son alınan değerler gösteriliyor.'}
- if(page.value==='monitor'&&!auditBusy.value&&errorItems.value.length<=50)refreshErrors()
- if(results[2].status==='fulfilled'){health.value=results[2].value;healthError.value=''}else{health.value=null;healthError.value=results[2].reason.message}
- lastRefresh.value=new Date();refreshRunning=false
+function refresh(){
+ dashboardSource?.close();dashboardState.value='connecting'
+ const stream=new EventSource('/api/dashboard/events');dashboardSource=stream
+ stream.onopen=()=>{if(dashboardSource===stream)dashboardState.value='live'}
+ stream.onerror=()=>{if(dashboardSource===stream)dashboardState.value='reconnecting'}
+ stream.addEventListener('dashboard',event=>{
+  if(dashboardSource!==stream)return
+  const data=JSON.parse(event.data)
+  stats.value=data.stats;campaigns.value=data.campaigns;channelStats.value=data.channel_stats
+  channelStatsError.value='';queueStats.value=data.queues;queueSampledAt.value=new Date()
+  queueStatsError.value=Object.values(data.queues).some(q=>!q.available)?'Redis kuyruk bilgisi alınamadı; eksik değerler — ile gösteriliyor.':''
+  health.value=data.health;healthError.value=data.health.postgres&&data.health.redis?'':'Bağımlılıklardan birine erişilemiyor.'
+  lastRefresh.value=new Date();dashboardState.value='live'
+  if(page.value==='monitor'&&!auditBusy.value&&errorItems.value.length<=50)refreshErrors()
+ })
 }
-watch(page,()=>{error.value='';refresh();if(page.value==='monitor')refreshErrors()})
-onMounted(async()=>{try{config.value=await api('/api/config')}catch(e){error.value=e.message}await refresh();const id=localStorage.getItem('studio.campaign');if(isCampaignId(id))await load(id);else if(id)localStorage.removeItem('studio.campaign');timer=setInterval(refresh,4000)})
-onUnmounted(()=>{source?.close();clearInterval(timer)})
+watch(page,()=>{error.value='';if(page.value==='monitor')refreshErrors()})
+onMounted(async()=>{refresh();try{config.value=await api('/api/config')}catch(e){error.value=e.message}const id=localStorage.getItem('studio.campaign');if(isCampaignId(id))await load(id);else if(id)localStorage.removeItem('studio.campaign')})
+onUnmounted(()=>{source?.close();dashboardSource?.close()})
 </script>
 
 <template>
@@ -99,6 +107,7 @@ onUnmounted(()=>{source?.close();clearInterval(timer)})
      <div class="hero-copy"><div class="eyebrow">◆ AI-POWERED CUSTOMER ENGAGEMENT</div><h1>Doğru kitle.<br><em>Daha güçlü etkileşim.</em></h1><p>SMS ve email kampanyalarını tek bir yerden oluştur.<br>Yapay zekâ ile hazırla, son kararı sen ver.</p><div class="hero-note"><span></span> YAPAY ZEKÂ ÖNERİR. SEN KARAR VERİRSİN.</div></div>
      <div class="hero-art" aria-hidden="true"><div class="orbit orbit-1"></div><div class="orbit orbit-2"></div><span class="orbit-text">BİR FİKİR. ÇOK ETKİ.</span><span class="spark">✳</span><div class="floating-card email-card"><span class="art-icon">✉</span><div><small>EMAIL</small><b>Sepetinde bir sürpriz var.</b><p>Bir hatırlatma, yeni bir başlangıç.</p></div><span>✦</span></div><div class="floating-card sms-card"><span class="art-icon">▤</span><div><small>SMS</small><b>Merhaba Deniz, sepetin seni bekliyor!</b><p>Kısa. Samimi. Tam zamanında.</p></div></div><span class="sample-label">ÖRNEK İÇERİK</span></div>
     </section>
+    <div v-if="page==='studio'" class="studio-toolbar"><button class="primary" :disabled="busy" @click="reset">Yeni kampanya ＋</button></div>
     <div v-if="error" class="error-banner" role="alert"><span>!</span>{{error}}<button aria-label="Uyarıyı kapat" @click="error=''">×</button></div>
     <div v-if="page==='studio'" class="studio-grid">
      <div>
@@ -115,14 +124,17 @@ onUnmounted(()=>{source?.close();clearInterval(timer)})
     </div>
 
     <template v-if="page==='monitor'">
-     <div class="page-title"><div><div class="eyebrow">HER MESAJIN İZİNİ SÜR</div><h1>Gönderim takibi<span class="orange">.</span></h1><p>Kuyruktan provider’a, tüm süreç tek ekranda.</p></div><button class="primary" @click="reset">Yeni kampanya ＋</button></div>
+     <div class="page-title"><div><div class="eyebrow">HER MESAJIN İZİNİ SÜR</div><h1>Gönderim takibi<span class="orange">.</span></h1><p>Kuyruktan provider’a, tüm süreç tek ekranda.</p></div></div>
+     <section v-if="campaign && !['draft','generating','failed'].includes(campaign.status)" class="panel delivery-panel"><div class="panel-heading"><div><div class="eyebrow muted">SEÇİLİ KAMPANYA · {{campaign.id.slice(0,8)}}</div><h2>{{campaign.proposal.segment.city}} · {{statusNames[campaign.status]}}</h2></div><span class="live-badge"><i :class="{offline:streamState!=='live'}"></i>{{streamState==='live'?'CANLI SSE':'YENİDEN BAĞLANIYOR'}}</span></div><p class="fineprint">{{campaign.brief}}</p><div class="progress-heading"><b>{{fmt(terminal)}} / {{fmt(total)}} mesaj sonuçlandı</b><span>%{{progress}}</span></div><div class="progress-track"><div :style="{width:progress+'%'}"></div></div><div class="detail-grid"><div v-for="(label,key) in deliveryLabels" :key="key"><span>{{label}}</span><b>{{fmt(counts[key])}}</b></div></div></section>
+     <p v-if="queueStatsError" class="audit-warning" role="alert">{{queueStatsError}}</p>
+     <p v-if="stats.unknown" class="audit-warning" role="alert">{{fmt(stats.unknown)}} mesajın provider sonucu belirsiz. Otomatik retry durduruldu; hata geçmişinden inceleyin.</p>
      <p v-if="channelStatsError" class="audit-warning" role="alert">{{channelStatsError}}</p>
      <section v-for="channel in channelViews" :key="channel.id" class="channel-summary" :aria-label="channel.label+' gönderim özeti'">
       <div class="channel-summary-heading"><h2><span>{{channel.icon}}</span> {{channel.label}}</h2><span>Tüm kampanyalar · Kanal limiti 100 istek / saniye</span></div>
-      <div class="stat-grid"><div class="panel stat" v-for="(item,i) in [['Provider kabul etti',channelStats[channel.id].accepted,'↗'],['Kuyrukta & işleniyor',(channelStats[channel.id].pending||0)+(channelStats[channel.id].processing||0),'◷'],['Yeniden denenecek',channelStats[channel.id].retrying,'↻'],['Kalıcı hata',channelStats[channel.id].failed,'!']]" :key="i"><div>{{item[0]}}<span>{{item[2]}}</span></div><strong>{{fmt(item[1])}}</strong><small>{{i===0?'Alıcıya teslim edildi anlamına gelmez':i===2?'Geçici hatalar ve rate limit beklemeleri':channel.label+' kanalı'}}</small></div></div>
-      <section class="panel delivery-panel"><div class="eyebrow muted">{{channel.label.toUpperCase()}} · KUYRUK GÖRÜNÜMÜ</div><div class="detail-grid"><div><span>Kuyruğa aktarılacak</span><b>{{fmt(channelStats[channel.id].outbox_pending)}}</b></div><div><span>Toplam geçici hata / 429</span><b>{{fmt(channelStats[channel.id].retry_attempts)}}</b></div><div><span>İzin nedeniyle iptal</span><b>{{fmt(channelStats[channel.id].suppressed)}}</b></div></div></section>
+      <div class="stat-grid"><div class="panel stat" v-for="(item,i) in [['Provider kabul etti',channelStats[channel.id].accepted,'↗'],['Kuyruktaki işler',queueStats[channel.id]?.available?queueStats[channel.id].outstanding:null,'◷'],['Retry bekleyen işler',queueStats[channel.id]?.available?queueStats[channel.id].retry:null,'↻'],['Kalıcı hata',channelStats[channel.id].failed,'!']]" :key="i"><div>{{item[0]}}<span>{{item[2]}}</span></div><strong>{{item[1]===null?'—':fmt(item[1])}}</strong><small>{{i===0?'Alıcıya teslim edildi anlamına gelmez':i===1?'Hazır, aktif, zamanlanmış ve retry işleri':i===2?'Geçici hatalar ve rate limit beklemeleri':channel.label+' kanalı'}}</small></div></div>
+
      </section>
-     <section v-if="campaign && !['draft','generating','failed'].includes(campaign.status)" class="panel delivery-panel"><div class="panel-heading"><div><div class="eyebrow muted">SEÇİLİ KAMPANYA · {{campaign.id.slice(0,8)}}</div><h2>{{campaign.proposal.segment.city}} · {{statusNames[campaign.status]}}</h2></div><span class="live-badge"><i :class="{offline:streamState!=='live'}"></i>{{streamState==='live'?'CANLI SSE':'YENİDEN BAĞLANIYOR'}}</span></div><p class="fineprint">{{campaign.brief}}</p><div class="progress-heading"><b>{{fmt(terminal)}} / {{fmt(total)}} mesaj sonuçlandı</b><span>%{{progress}}</span></div><div class="progress-track"><div :style="{width:progress+'%'}"></div></div><div class="detail-grid"><div v-for="(label,key) in deliveryLabels" :key="key"><span>{{label}}</span><b>{{fmt(counts[key])}}</b></div></div></section>
+
 
      <section class="panel error-panel">
       <div class="panel-heading"><div><div class="eyebrow muted">İNCELEME & DENEME GEÇMİŞİ</div><h2>Hatalar ve retry nedenleri</h2></div><button class="secondary" :disabled="auditBusy" @click="refreshErrors()">↻ Yenile</button></div>

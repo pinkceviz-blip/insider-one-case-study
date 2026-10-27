@@ -1,0 +1,132 @@
+{
+  "campaign_id": "f965d5822fb004294fc0a9dea4a1af35",
+  "audience": {
+    "total": 669,
+    "sms": 502,
+    "email": 96
+  },
+  "before": {
+    "channels": {
+      "email": {
+        "available": true,
+        "pending": 0,
+        "active": 0,
+        "scheduled": 0,
+        "retry": 0,
+        "aggregating": 0,
+        "archived": 0,
+        "completed": 168,
+        "outstanding": 0,
+        "paused": false,
+        "latency_ms": 0
+      },
+      "sms": {
+        "available": true,
+        "pending": 0,
+        "active": 0,
+        "scheduled": 0,
+        "retry": 0,
+        "aggregating": 0,
+        "archived": 0,
+        "completed": 1092,
+        "outstanding": 0,
+        "paused": false,
+        "latency_ms": 0
+      }
+    },
+    "sampled_at": "2026-10-27T09:35:48.790869175Z"
+  },
+  "during": {
+    "channels": {
+      "email": {
+        "available": true,
+        "pending": 96,
+        "active": 0,
+        "scheduled": 0,
+        "retry": 0,
+        "aggregating": 0,
+        "archived": 0,
+        "completed": 168,
+        "outstanding": 96,
+        "paused": false,
+        "latency_ms": 69
+      },
+      "sms": {
+        "available": true,
+        "pending": 4,
+        "active": 0,
+        "scheduled": 0,
+        "retry": 0,
+        "aggregating": 0,
+        "archived": 0,
+        "completed": 1092,
+        "outstanding": 4,
+        "paused": false,
+        "latency_ms": 49
+      }
+    },
+    "sampled_at": "2026-10-27T09:35:51.415271676Z"
+  },
+  "observed_nonzero_real_queue": true,
+  "note": "Gerçek mock kampanya onaylandı; workerlar normal hızında çalışıyor. Yapay bekletme veya kuyruk duraklatma uygulanmadı.",
+  "after": {
+    "channels": {
+      "email": {
+        "available": true,
+        "pending": 0,
+        "active": 0,
+        "scheduled": 0,
+        "retry": 0,
+        "aggregating": 0,
+        "archived": 0,
+        "completed": 264,
+        "outstanding": 0,
+        "paused": false,
+        "latency_ms": 0
+      },
+      "sms": {
+        "available": true,
+        "pending": 0,
+        "active": 0,
+        "scheduled": 0,
+        "retry": 0,
+        "aggregating": 0,
+        "archived": 0,
+        "completed": 1594,
+        "outstanding": 0,
+        "paused": false,
+        "latency_ms": 0
+      }
+    },
+    "sampled_at": "2026-10-27T09:40:35.238912418Z"
+  },
+  "campaign_final": {
+    "id": "f965d5822fb004294fc0a9dea4a1af35",
+    "brief": "İstanbul'da son 30 günde sepetine ürün ekleyip satın almayanlara %10 indirim hatırlatması gönder. Kuyruk görünümü mock testi.",
+    "status": "completed",
+    "version": 1,
+    "proposal": {
+      "segment": {
+        "city": "İstanbul",
+        "days": 30,
+        "exclude_purchased": true
+      },
+      "content": {
+        "sms": "Merhaba {{first_name}}, sepetin seni bekliyor! %10 indirim fırsatını kaçırma.",
+        "email_subject": "Sepetinde %10 indirim seni bekliyor",
+        "email_body": "Merhaba {{first_name}}, seçtiğin ürünleri %10 indirimle tamamlayabilirsin. Sepetine dön, fırsatı değerlendir!"
+      }
+    },
+    "audience": {
+      "total": 669,
+      "sms": 502,
+      "email": 96
+    },
+    "error": "",
+    "created_at": "2026-10-27T09:35:48.794048Z",
+    "counts": {
+      "accepted": 587,
+      "failed": 11
+    }
+  }
+}

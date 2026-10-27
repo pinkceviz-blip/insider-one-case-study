@@ -15,3 +15,8 @@ Hazırlanan görünür konuşma kaydı, görselleriyle birlikte [codex-conversat
 - [Ekler](codex-conversation-2026-10-27/attachments/)
 
 Bu anlık görüntü ilk “selam” mesajından konuşma export’u isteğine kadardır; daha sonraki güvenlik testi/push mesajlarını kapsamaz. 12 kullanıcı mesajı, 37 görünür asistan mesajı ve 6 kullanıcı görseli içerir. Sistem/geliştirici talimatları, özel muhakeme ve araç kayıtları dahil edilmemiştir. Bu dosyalar Claude session export şartının yerine geçtiği iddiasını taşımaz.
+
+
+## Güncellenmiş export — 27 Ekim 2026
+
+[codex-conversation-2026-10-27-updated/conversation.md](codex-conversation-2026-10-27-updated/conversation.md): güncel görünür konuşma, 9 kullanıcı görseli ve test senaryosu eki. Markdown ve JSON birlikte sağlanır. Önceki export tarihsel kayıttır. Bu bir Codex konuşmasıdır, Claude session export’u değildir.

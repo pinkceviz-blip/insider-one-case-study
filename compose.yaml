@@ -4,6 +4,7 @@ x-backend: &backend
     DATABASE_URL: postgres://studio:studio@postgres:5432/studio?sslmode=disable
     REDIS_ADDR: redis:6379
     PROVIDER_URL: http://provider:8090
+    CAMPAIGN_TTL: ${CAMPAIGN_TTL:-0s}
     LLM_MODE: ${LLM_MODE:-mock}
     ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-5}

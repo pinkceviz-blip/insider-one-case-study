@@ -14,11 +14,12 @@ import (
 )
 
 type Engine struct {
-	Store    *Store
-	Redis    *redis.Client
-	Queue    *asynq.Client
-	Registry *Registry
-	LLM      LLM
+	Store       *Store
+	Redis       *redis.Client
+	Queue       *asynq.Client
+	Registry    *Registry
+	LLM         LLM
+	CampaignTTL time.Duration
 }
 
 func RetryDelay(n int, e error, _ *asynq.Task) time.Duration {
@@ -83,6 +84,9 @@ func (e *Engine) HandleGeneration(ctx context.Context, t *asynq.Task) error {
 	})
 	if err == nil {
 		err = e.Registry.Validate(p)
+	}
+	if err == nil {
+		err = ValidateBriefSegment(c.Brief, p.Segment)
 	}
 	if err == nil {
 		err = e.Store.SaveProposal(ctx, c.ID, p)

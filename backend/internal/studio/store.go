@@ -64,7 +64,11 @@ func (s *Store) Campaign(ctx context.Context, id string) (Campaign, error) {
 	if c.Status == "approved" || c.Status == "dispatching" {
 		active := c.Counts["pending"] + c.Counts["processing"] + c.Counts["retrying"]
 		if active == 0 {
-			c.Status = "completed"
+			if c.Counts["unknown"] > 0 {
+				c.Status = "needs_review"
+			} else {
+				c.Status = "completed"
+			}
 		} else {
 			c.Status = "dispatching"
 		}

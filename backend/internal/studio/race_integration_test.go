@@ -20,6 +20,7 @@ type controlledProvider struct {
 	cancel   context.CancelFunc
 }
 
+func (p *controlledProvider) SupportsIdempotency() bool { return true }
 func (p *controlledProvider) Send(ctx context.Context, key string, msg Message) (string, error) {
 	p.mu.Lock()
 	p.calls++

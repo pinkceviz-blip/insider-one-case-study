@@ -42,7 +42,7 @@ func (e *Engine) HandleDelivery(parent context.Context, t *asynq.Task) error {
 	if err != nil {
 		return err
 	}
-	if state == "accepted" || state == "failed" || state == "suppressed" {
+	if state == "accepted" || state == "failed" || state == "suppressed" || state == "unknown" {
 		return nil
 	}
 	// The DB schedule is authoritative even if a duplicate/recovery task arrives early.
@@ -80,6 +80,10 @@ func (e *Engine) HandleDelivery(parent context.Context, t *asynq.Task) error {
 		if target == "accepted" {
 			outcome = "accepted"
 			message = "Provider kabul kaydı doğrulandı."
+		}
+		if target == "unknown" {
+			outcome = "unknown"
+			message = "Provider sonucu belirsiz; otomatik gönderim durduruldu. Provider kabulünü manuel doğrulayın."
 		}
 		if target == "suppressed" {
 			outcome = "suppressed"
@@ -166,7 +170,10 @@ func (e *Engine) HandleDelivery(parent context.Context, t *asynq.Task) error {
 			}
 		}
 	}
-	if dbNow.Sub(approved) > 24*time.Hour {
+	if len(stored) > 0 && attempts > 0 && !safeToResend(provider) {
+		return finish("unknown", "provider_outcome_unknown", "", Transient, 0, 0)
+	}
+	if e.CampaignTTL > 0 && dbNow.Sub(approved) > e.CampaignTTL {
 		return finish("failed", "campaign_expired", "", Permanent, 0, 0)
 	}
 	if failures >= 9 {
@@ -244,6 +251,9 @@ func (e *Engine) HandleDelivery(parent context.Context, t *asynq.Task) error {
 		return finish("accepted", "", providerID, "", 0, 0)
 	}
 	currentProviderError = sendErr
+	if !safeToResend(provider) && providerKind(sendErr) != Permanent {
+		return finish("unknown", "provider_outcome_unknown", "", Transient, 0, 0)
+	}
 	code := safeProviderError(sendErr)
 	kind := providerKind(sendErr)
 	if kind == Permanent {
